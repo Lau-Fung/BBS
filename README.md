@@ -1,2 +1,0 @@
-# BBS
-rak bbs 
