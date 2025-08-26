@@ -19,8 +19,14 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
 
-        $middleware->group('api', [
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        // $middleware->group('api', [
+        //     \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        // ]);
+        // Spatie aliases (needed for route protection)
+        $middleware->alias([
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

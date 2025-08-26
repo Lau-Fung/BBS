@@ -10,12 +10,22 @@
                     </a>
                 </div>
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
+                <!-- Admin menu: Only visible to Admins -->
+                @role('Admin')
+                    <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                        <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
+                            {{ __('User Management') }}
+                        </x-nav-link>
+                    </div>
+                @endrole
+
+                {{-- @canany(['records.view','records.create','records.update'])
+                    <x-nav-link :href="route('records.index')" :active="request()->routeIs('records.*')">
+                        {{ __('Records') }}
                     </x-nav-link>
-                </div>
+                @endcanany --}}
+
+
             </div>
 
             <!-- Settings Dropdown -->
