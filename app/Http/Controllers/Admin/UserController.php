@@ -60,6 +60,7 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        // $this->authorize('users.assign-roles'); // optional Gate if you add it
         $request->validate([
             'roles' => ['array'],
             'roles.*' => ['exists:roles,name'],

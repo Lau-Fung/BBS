@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Response;
+use PragmaRX\Google2FAQRCode\Google2FA;
+use App\Http\Controllers\RecordController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -16,15 +19,64 @@ Route::get('/locale/{locale}', function ($locale) {
     return back();
 })->name('locale.switch');
 
+Route::get('/user/two-factor-qr-code', function () {
+    $user = auth()->user();
+
+    if (! $user->two_factor_secret) {
+        abort(404);
+    }
+
+    $google2fa = app(Google2FA::class);
+
+    $svg = $google2fa->getQRCodeInline(
+        config('app.name'),
+        $user->email,
+        decrypt($user->two_factor_secret)
+    );
+
+    return response($svg, 200)->header('Content-Type', 'image/svg+xml');
+})->middleware(['auth'])->name('two-factor.qr-code');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::view('/profile/security', 'profile.security')->name('profile.security');
+
+     // Minimal records routes for Milestone-1
+    Route::prefix('records')->name('records.')->group(function () {
+        Route::get('/', [RecordController::class, 'index'])->name('index');       // records.index
+        Route::get('/create', [RecordController::class, 'create'])->name('create');
+        Route::post('/', [RecordController::class, 'store'])->name('store');
+        Route::get('/{record}/edit', [RecordController::class, 'edit'])->name('edit');
+        Route::put('/{record}', [RecordController::class, 'update'])->name('update');
+        Route::delete('/{record}', [RecordController::class, 'destroy'])->name('destroy');
+    });
 });
 
 Route::middleware(['auth','role:Admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->only(['index','edit','update']);
+    
+    // Domain records (role/permission-based)
+    // Route::prefix('records')->name('records.')->group(function () {
+    //     Route::get('/', [RecordController::class,'index'])
+    //         ->middleware('permission:records.view')->name('index');
+
+    //     Route::get('/create', [RecordController::class,'create'])
+    //         ->middleware('permission:records.create')->name('create');
+
+    //     Route::post('/', [RecordController::class,'store'])
+    //         ->middleware('permission:records.create')->name('store');
+
+    //     Route::get('/{record}/edit', [RecordController::class,'edit'])
+    //         ->middleware('permission:records.update')->name('edit');
+
+    //     Route::put('/{record}', [RecordController::class,'update'])
+    //         ->middleware('permission:records.update')->name('update');
+
+    //     Route::delete('/{record}', [RecordController::class,'destroy'])
+    //         ->middleware('permission:records.delete')->name('destroy');
+    // });
 });
 
 require __DIR__.'/auth.php';
