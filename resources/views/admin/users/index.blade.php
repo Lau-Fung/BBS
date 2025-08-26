@@ -10,7 +10,7 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <div class="overflow-x-auto">
                     <table class="min-w-full w-100 text-sm">
-                        <thead>
+                        <thead class="ltr:text-left rtl:text-right">
                             <tr class="border-b">
                                 <th class="text-left p-2">#</th>
                                 <th class="text-left p-2">{{ __('Name') }}</th>
@@ -19,7 +19,7 @@
                                 <th class="text-right p-2">{{ __('Action') }}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="ltr:text-left rtl:text-right">
                         @foreach($users as $u)
                             <tr class="border-b">
                                 <td class="p-2">{{ $u->id }}</td>

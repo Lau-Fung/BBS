@@ -14,8 +14,10 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/locale/{locale}', function ($locale) {
-    session(['locale' => in_array($locale,['ar','en']) ? $locale : 'ar']);
+Route::get('/locale/{locale}', function (string $locale) {
+    abort_unless(in_array($locale, ['ar','en']), 404);
+    session(['locale' => $locale]);
+    // Optional: if you use cache for config/trans, you don't need to clear here.
     return back();
 })->name('locale.switch');
 
