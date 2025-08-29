@@ -5,6 +5,11 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Response;
 use PragmaRX\Google2FAQRCode\Google2FA;
 use App\Http\Controllers\RecordController;
+use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\SimController;
+use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\SensorController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -79,6 +84,25 @@ Route::middleware(['auth','role:Admin'])->prefix('admin')->name('admin.')->group
     //     Route::delete('/{record}', [RecordController::class,'destroy'])
     //         ->middleware('permission:records.delete')->name('destroy');
     // });
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('assignments', AssignmentController::class);
+    Route::post('assignments/{assignment}/restore', [AssignmentController::class,'restore'])
+        ->name('assignments.restore'); // if you enable soft deletes
+
+    Route::resource('vehicles', VehicleController::class);
+    Route::post('vehicles/{vehicle}/restore', [VehicleController::class,'restore'])->name('vehicles.restore');
+
+    Route::resource('sims', SimController::class);
+    Route::post('sims/{sim}/restore', [SimController::class,'restore'])->name('sims.restore');
+
+    Route::resource('devices', DeviceController::class);
+    Route::post('devices/{device}/restore', [DeviceController::class,'restore'])->name('devices.restore');
+
+    Route::resource('sensors', SensorController::class);
+    Route::post('sensors/{sensor}/restore', [SensorController::class,'restore'])->name('sensors.restore');
+
 });
 
 require __DIR__.'/auth.php';

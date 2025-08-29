@@ -2,25 +2,29 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Clear cached roles/permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        // clear cached roles & permissions
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
-        // Define permissions (expand later for your domain)
+        // ---- Permissions (add what your policies/controllers check) ----
         $perms = [
+            // Assignments (used by AssignmentPolicy)
+            'assignments.view',
+            'assignments.create',
+            'assignments.update',
+            'assignments.delete',
+            'assignments.restore',
+
+            // You can keep your user/record perms too if you use them elsewhere
             'users.view',
             'users.assign-roles',
             'records.view',
@@ -28,27 +32,40 @@ class RolesAndPermissionsSeeder extends Seeder
             'records.update',
             'records.delete',
         ];
+
         foreach ($perms as $p) {
-            Permission::firstOrCreate(['name' => $p]);
+            Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
         }
 
-        // Roles
-        $admin   = Role::firstOrCreate(['name' => 'Admin']);
-        $manager = Role::firstOrCreate(['name' => 'Manager']);
-        $entry   = Role::firstOrCreate(['name' => 'Data Entry']);
-        $viewer  = Role::firstOrCreate(['name' => 'Viewer']);
+        // ---- Roles ----
+        $admin   = Role::firstOrCreate(['name' => 'Admin',      'guard_name' => 'web']);
+        $manager = Role::firstOrCreate(['name' => 'Manager',    'guard_name' => 'web']);
+        $entry   = Role::firstOrCreate(['name' => 'Data Entry', 'guard_name' => 'web']);
+        $viewer  = Role::firstOrCreate(['name' => 'Viewer',     'guard_name' => 'web']);
 
-        // Map permissions → roles
+        // ---- Map permissions to roles ----
         $admin->syncPermissions($perms);
-        $manager->syncPermissions(['records.view','records.create','records.update']);
-        $entry->syncPermissions(['records.view','records.create','records.update']);
-        $viewer->syncPermissions(['records.view']);
 
-        // Create first admin
+        $manager->syncPermissions([
+            'assignments.view','assignments.create','assignments.update',
+            'records.view','records.create','records.update',
+        ]);
+
+        $entry->syncPermissions([
+            'assignments.view','assignments.create','assignments.update',
+            'records.view','records.create','records.update',
+        ]);
+
+        $viewer->syncPermissions(['assignments.view','records.view']);
+
+        // ---- Bootstrap first admin user ----
         $user = User::firstOrCreate(
             ['email' => 'admin@admin.it'],
             ['name' => 'System Admin', 'password' => Hash::make('ChangeMe#1234')]
         );
         $user->syncRoles(['Admin']);
+
+        // recache
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }
