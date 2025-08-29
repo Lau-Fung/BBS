@@ -10,6 +10,7 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\SimController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\SensorController;
+use App\Http\Controllers\CarrierController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -103,6 +104,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('sensors', SensorController::class);
     Route::post('sensors/{sensor}/restore', [SensorController::class,'restore'])->name('sensors.restore');
 
+    Route::resource('carriers', CarrierController::class);
+    Route::post('carriers/{carrier}/restore', [CarrierController::class,'restore'])->name('carriers.restore');
 });
 
 require __DIR__.'/auth.php';
