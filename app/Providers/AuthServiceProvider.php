@@ -1,11 +1,8 @@
-<?php
+<?php 
 
-namespace App\Providers;
-
-use Illuminate\Support\ServiceProvider;
 use App\Models\Assignment;
 use App\Policies\AssignmentPolicy;
-use Illuminate\Support\Facades\Gate;
+// use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -15,7 +12,7 @@ class AuthServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->registerPolicies(); // keep this
+        // $this->registerPolicies(); // keep this
         // Gate::policy(Assignment::class, AssignmentPolicy::class); // optional explicit
     }
 }
