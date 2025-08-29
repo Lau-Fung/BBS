@@ -236,7 +236,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end space-x-2">
                                         <a href="{{ route('assignments.edit', $assignment) }}" 
-                                           class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                                           class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300" style="padding-right: 10px;">
                                             Edit
                                         </a>
                                         <form action="{{ route('assignments.destroy', $assignment) }}" 

@@ -12,16 +12,35 @@
 
         <div class="collapse navbar-collapse" id="mainNav">
             {{-- Left side menu --}}
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                @role('Admin')
+            
+            @role('Admin')
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active fw-bold' : '' }}"
-                           href="{{ route('admin.users.index') }}">
-                            {{ __('messages.user_management') }}
-                        </a>
+                        <a class="nav-link {{ request()->routeIs('assignments.*') ? 'active fw-bold' : '' }}" href="{{ route('assignments.index') }}">Assignments</a>
                     </li>
-                @endrole
-            </ul>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('vehicles.*') ? 'active fw-bold' : '' }}" href="{{ route('vehicles.index') }}">Vehicles</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('devices.*') ? 'active fw-bold' : '' }}" href="{{ route('devices.index') }}">Devices</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('sims.*') ? 'active fw-bold' : '' }}" href="{{ route('sims.index') }}">SIMs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('sensors.*') ? 'active fw-bold' : '' }}" href="{{ route('sensors.index') }}">Sensors</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('carriers.*') ? 'active fw-bold' : '' }}" href="{{ route('carriers.index') }}">Carriers</a>
+                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active fw-bold' : '' }}"
+                            href="{{ route('admin.users.index') }}">
+                                {{ __('messages.user_management') }}
+                            </a>
+                        </li>
+                </ul>
+            @endrole
 
             {{-- Right side menu --}}
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">

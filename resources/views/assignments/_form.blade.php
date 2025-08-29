@@ -144,10 +144,6 @@
 
 <!-- Action Buttons -->
 <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-    <a href="{{ route('assignments.index') }}" 
-       class="px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors duration-200">
-        Cancel
-    </a>
     <button type="submit" 
             class="px-6 py-3 bg-blue-600 hover:bg-blue-700 font-medium rounded-lg transition-colors duration-200 flex items-center">
         @if(isset($assignment) && $assignment->exists)
@@ -162,6 +158,10 @@
             Create Assignment
         @endif
     </button>
+    <a href="{{ route('assignments.index') }}" 
+       class="px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors duration-200">
+        Cancel
+    </a>
 </div>
 
 <!-- JavaScript for enhanced UX -->
