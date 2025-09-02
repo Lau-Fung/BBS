@@ -15,6 +15,8 @@ use Illuminate\Support\Arr;
 use App\Models\{
     Assignment, Carrier, Device, DeviceModel, Sensor, SensorModel, Sim, Vehicle
 };
+use App\Exports\AssignmentsExport;
+use Maatwebsite\Excel\Excel as ExcelWriter;
 
 class ImportAssignmentsController extends Controller
 {
@@ -477,5 +479,28 @@ class ImportAssignmentsController extends Controller
         if (!empty($messages)) return [false, [], $messages];
 
         return [true, $row, []];
+    }
+
+    public function export(Request $request)
+    {
+        // Accept ?format=xlsx|csv and simple filters
+        $format = strtolower($request->get('format', 'xlsx'));
+        $writer = $format === 'csv' ? ExcelWriter::CSV : ExcelWriter::XLSX;
+
+        $filters = $request->only([
+            'is_active',        // 1 or 0
+            'carrier',          // e.g., LEBARA
+            'device_model',     // e.g., FMC920
+            'installed_from',   // YYYY-MM-DD
+            'installed_to',     // YYYY-MM-DD
+        ]);
+
+        $file = 'assignments_' . now()->format('Ymd_His') . '.' . $format;
+
+        return Excel::download(
+            new AssignmentsExport($filters),
+            $file,
+            $writer
+        );
     }
 }

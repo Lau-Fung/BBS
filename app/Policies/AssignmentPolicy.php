@@ -6,6 +6,7 @@ use App\Models\Assignment;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
+
 class AssignmentPolicy
 {
     /**

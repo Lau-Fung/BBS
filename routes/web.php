@@ -12,6 +12,7 @@ use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\SensorController;
 use App\Http\Controllers\CarrierController;
 use App\Http\Controllers\ImportAssignmentsController;
+use App\Http\Controllers\AttachmentController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -111,7 +112,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get ('/imports/assignments',              [ImportAssignmentsController::class,'form'])->name('imports.assignments.form');
     Route::post('/imports/assignments/preview',      [ImportAssignmentsController::class,'preview'])->name('imports.assignments.preview');
     Route::post('/imports/assignments/confirm',      [ImportAssignmentsController::class,'confirm'])->name('imports.assignments.confirm');
-    Route::post('/imports/assignments/cancel',       [ImportAssignmentsController::class,'cancel'])->name('imports.assignments.cancel');
+    Route::get('/exports/assignments',               [ImportAssignmentsController::class, 'export'])->name('exports.assignments');
+
+    Route::post('/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
+    Route::get('/attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
+    Route::delete('/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
 });
 
 require __DIR__.'/auth.php';

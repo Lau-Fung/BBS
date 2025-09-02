@@ -6,12 +6,14 @@ namespace App\Providers;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Models\Assignment;
 use App\Policies\AssignmentPolicy;
-// use Illuminate\Support\Facades\Gate;
+use App\Models\Attachment;
+use App\Policies\AttachmentPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
         Assignment::class => AssignmentPolicy::class,
+        Attachment::class => AttachmentPolicy::class,
     ];
 
     public function boot(): void

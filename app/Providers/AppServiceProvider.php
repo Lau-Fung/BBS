@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Models\{Assignment, Device, Vehicle, Sim, Sensor};
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,5 +25,12 @@ class AppServiceProvider extends ServiceProvider
         Password::defaults(function () {
             return Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised();
         });
+        Relation::morphMap([
+            'assignment' => Assignment::class,
+            'device'     => Device::class,
+            'vehicle'    => Vehicle::class,
+            'sim'        => Sim::class,
+            'sensor'     => Sensor::class,
+        ]);
     }
 }

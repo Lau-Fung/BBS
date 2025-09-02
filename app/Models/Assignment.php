@@ -4,14 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Concerns\HasAttachments;
 
 class Assignment extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasAttachments;
 
     protected $fillable = [
         'device_id','sim_id','vehicle_id','sensor_id',
         'is_installed','installed_on','removed_on','install_note','is_active',
+    ];
+
+    protected $casts = [
+        'is_installed' => 'boolean',
+        'is_active'    => 'boolean',
+        'installed_on' => 'date',
+        'removed_on'   => 'date',
     ];
 
     public function device() { 

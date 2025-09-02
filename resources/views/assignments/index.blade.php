@@ -24,6 +24,24 @@
                         </svg>
                         Import from Excel
                     </a>
+                    <a href="{{ route('exports.assignments', ['format' => 'xlsx']) }}" 
+                    class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 8V6a2 2 0 012-2h12a2 2 0 012 2v2M7 14l5-5m0 0l5 5m-5-5v12" />
+                        </svg>
+
+                        Export XLSX
+                    </a>
+                    <a href="{{ route('exports.assignments', ['format' => 'csv']) }}" 
+                    class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 8V6a2 2 0 012-2h12a2 2 0 012 2v2M7 14l5-5m0 0l5 5m-5-5v12" />
+                        </svg>
+
+                        Export CSV
+                    </a>
                 </div>
             </div>
         </div>
