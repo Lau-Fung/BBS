@@ -20,6 +20,15 @@ use Maatwebsite\Excel\Excel as ExcelWriter;
 
 class ImportAssignmentsController extends Controller
 {
+    // Which columns are required per row in the preview
+    private const REQUIRED = [
+        'imei'       => true,
+        'sim_serial' => false,
+        'msisdn'     => false,
+        'plate'      => false,
+        'sensor'     => false,
+    ];
+
     public function form()
     {
         return view('imports.assignments.form');
@@ -87,21 +96,39 @@ class ImportAssignmentsController extends Controller
         }
 
         // 5) Duplicate detection (in-file only)
-        $dupCounts = $this->duplicateCounts($rows, ['imei','sim_serial','msisdn']);
+        $dupCounts = $this->duplicateCounts($rows, ['imei','sim_serial','msisdn','plate','sensor']);
+        // Prefetch existing values from DB (for unique/conflict flags)
+        $vals = fn(string $k) => collect($rows)->pluck($k)->filter()->unique()->values();
+
+        $exists = [
+            'imei'       => Device::whereIn('imei', $vals('imei'))->pluck('imei')->flip()->all(),
+            'sim_serial' => Sim::whereIn('sim_serial', $vals('sim_serial'))->pluck('sim_serial')->flip()->all(),
+            'msisdn'     => Sim::whereIn('msisdn', $vals('msisdn'))->pluck('msisdn')->flip()->all(),
+            'plate'      => Vehicle::whereIn('plate', $vals('plate'))->pluck('plate')->flip()->all(),
+            'sensor'     => Sensor::whereIn('serial_or_bt_id', $vals('sensor'))->pluck('serial_or_bt_id')->flip()->all(),
+        ];
+
 
         // 6) Row validation
         $valid = [];
         $issues = [];
+        $cellErrors = []; // [rowIndex => [field => 'required'|'format'|'dup-file'|'dup-db']]
+
         foreach ($rows as $i => $row) {
-            // Excel-like row number (headerRowNum + 1 = first data row)
             $excelRow = $headerRowNum + 1 + $i;
-            [$ok, $clean, $errs] = $this->validateRow($row, $excelRow, $dupCounts);
+
+            [$ok, $clean, $errs, $fieldErrs] = $this->validateRow($row, $excelRow, $dupCounts, $exists);
+
             if ($ok) {
                 $valid[] = $clean;
-            } else {
+            }
+            if (!empty($errs)) {
                 $issues[] = ['row' => $excelRow, 'messages' => $errs];
             }
+
+            $cellErrors[$i] = $fieldErrs;
         }
+
 
         // Store $valid in session (or cache) for confirm step
         session()->put('import.assignments.valid', $valid);
@@ -115,6 +142,8 @@ class ImportAssignmentsController extends Controller
             'issues'     => $issues,
             'fatal'      => [],
             'canConfirm' => empty($issues),
+            'cellErrors' => $cellErrors,
+            'requiredMap'=> self::REQUIRED,
         ]);
     }
     
@@ -385,7 +414,7 @@ class ImportAssignmentsController extends Controller
         $map = [
             'imei'           => ['imei','ايمي','رقم_imei'],
             'sim_serial'     => ['sim_serial','رقم_الشريحة','icc','iccid'],
-            'msisdn'         => ['msisdن','msisdn','رقم_الهاتف','جوال','هاتف'],
+            'msisdn'         => ['msisdn','رقم_الهاتف','جوال','هاتف'],
             'plate'          => ['plate','لوحة','رقم_اللوحة'],
             'sensor'         => ['sensor','حساس','الحساس'],
             'model'          => ['model','موديل_الجهاز'],
@@ -456,30 +485,85 @@ class ImportAssignmentsController extends Controller
         return $counts;
     }
 
-    private function validateRow(array $row, int $rowNumber, array $dupCounts = []): array
-    {
-        $rules = [
-            'imei'         => ['required','string','size:15'], // adjust if needed
-            'msisdn'       => ['nullable','string'],
-            'sim_serial'   => ['nullable','string'],
-            'installed_on' => ['nullable','date'],
-            'removed_on'   => ['nullable','date'],
-        ];
+    private function validateRow(
+        array $row,
+        int $rowNumber,
+        array $dupCounts = [],
+        array $exists = []
+    ): array {
+        $messages  = [];
+        $fieldErrs = []; // field => 'required'|'format'|'dup-file'|'dup-db'
 
-        $v = Validator::make($row, $rules);
-        $messages = $v->fails() ? $v->errors()->all() : [];
+        // ----- REQUIRED -----
+        foreach (self::REQUIRED as $field => $req) {
+            if ($req && empty($row[$field])) {
+                $fieldErrs[$field] = 'required';
+                $messages[] = strtoupper($field) . " is required.";
+            }
+        }
+        // If IMEI missing, we can short-circuit (nothing else matters for that row)
+        if (!empty($fieldErrs['imei'])) {
+            return [false, [], $messages, $fieldErrs];
+        }
 
-        foreach (['imei','sim_serial','msisdn'] as $k) {
-            $val = trim((string)($row[$k] ?? ''));
-            if ($val !== '' && ($dupCounts[$k][$val] ?? 0) > 1) {
-                $messages[] = strtoupper($k)." '$val' appears more than once in this file.";
+        // ----- FORMAT -----
+        if (!empty($row['imei'])) {
+            $s = (string)$row['imei'];
+            if (!preg_match('/^\d{14,17}$/', $s)) {
+                $fieldErrs['imei'] = 'format';
+                $messages[] = "IMEI must be 14–17 digits.";
+            }
+        }
+        if (!empty($row['msisdn'])) {
+            $s = (string)$row['msisdn'];
+            if (!preg_match('/^\d{5,20}$/', $s)) {
+                $fieldErrs['msisdn'] = 'format';
+                $messages[] = "MSISDN should be 5–20 digits (digits only).";
+            }
+        }
+        if (!empty($row['sim_serial'])) {
+            $s = trim((string)$row['sim_serial']);
+            if (!preg_match('/^[A-Za-z0-9\-]+$/', $s)) {
+                $fieldErrs['sim_serial'] = 'format';
+                $messages[] = "SIM serial allows letters, numbers, and dashes only.";
             }
         }
 
-        if (!empty($messages)) return [false, [], $messages];
+        // ----- DUPLICATES inside this file -----
+        foreach (['imei','sim_serial','msisdn','plate','sensor'] as $k) {
+            $v = trim((string)($row[$k] ?? ''));
+            if ($v !== '' && ($dupCounts[$k][$v] ?? 0) > 1) {
+                $fieldErrs[$k] = $fieldErrs[$k] ?? 'dup-file';
+                $messages[] = strtoupper($k) . " '$v' appears more than once in this file.";
+            }
+        }
 
-        return [true, $row, []];
+        // ----- ALREADY EXISTS in DB (unique conflicts) -----
+        if (!empty($row['imei']) && isset($exists['imei'][$row['imei']])) {
+            $fieldErrs['imei'] = 'dup-db';
+            $messages[] = "IMEI '{$row['imei']}' already exists.";
+        }
+        if (!empty($row['sim_serial']) && isset($exists['sim_serial'][$row['sim_serial']])) {
+            $fieldErrs['sim_serial'] = 'dup-db';
+            $messages[] = "SIM serial '{$row['sim_serial']}' already exists.";
+        }
+        if (!empty($row['msisdn']) && isset($exists['msisdn'][$row['msisdn']])) {
+            $fieldErrs['msisdn'] = 'dup-db';
+            $messages[] = "MSISDN '{$row['msisdn']}' already exists.";
+        }
+        if (!empty($row['plate']) && isset($exists['plate'][$row['plate']])) {
+            $fieldErrs['plate'] = 'dup-db';
+            $messages[] = "Plate '{$row['plate']}' already exists.";
+        }
+        if (!empty($row['sensor']) && isset($exists['sensor'][$row['sensor']])) {
+            $fieldErrs['sensor'] = 'dup-db';
+            $messages[] = "Sensor '{$row['sensor']}' already exists.";
+        }
+
+        $ok = empty($messages); // strict: any message blocks this row
+        return [$ok, $row, $messages, $fieldErrs];
     }
+
 
     public function export(Request $request)
     {

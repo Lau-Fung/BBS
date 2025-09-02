@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Models\{Assignment, Device, Vehicle, Sim, Sensor};
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\StringValueBinder;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Cell::setValueBinder(new StringValueBinder());
         Password::defaults(function () {
             return Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised();
         });
