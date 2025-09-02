@@ -11,7 +11,7 @@
         "laravel/fortify": "*",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "maatwebsite/excel": "^1.1",
+        "maatwebsite/excel": "^3.1.60",
         "pragmarx/google2fa-laravel": "*",
         "spatie/laravel-permission": "*",
         "spatie/laravel-query-builder": "^6.3"

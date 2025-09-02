@@ -7,13 +7,22 @@
                     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Assignments</h1>
                     <p class="mt-2 text-gray-600 dark:text-gray-400">Manage device assignments and installations</p>
                 </div>
-                <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+                <div class="flex flex-row gap-3 justify-center items-center">
                     <a href="{{ route('assignments.create') }}" 
-                       class="inline-flex items-center px-6 py-3 mb-2 bg-blue-600 hover:bg-blue-700 text-gray-700 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                    class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
                         New Assignment
+                    </a>
+                    <a href="{{ route('imports.assignments.form') }}" 
+                    class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                        </svg>
+                        Import from Excel
                     </a>
                 </div>
             </div>

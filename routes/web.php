@@ -11,6 +11,7 @@ use App\Http\Controllers\SimController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\SensorController;
 use App\Http\Controllers\CarrierController;
+use App\Http\Controllers\ImportAssignmentsController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -106,6 +107,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('carriers', CarrierController::class);
     Route::post('carriers/{carrier}/restore', [CarrierController::class,'restore'])->name('carriers.restore');
+
+    Route::get ('/imports/assignments',              [ImportAssignmentsController::class,'form'])->name('imports.assignments.form');
+    Route::post('/imports/assignments/preview',      [ImportAssignmentsController::class,'preview'])->name('imports.assignments.preview');
+    Route::post('/imports/assignments/confirm',      [ImportAssignmentsController::class,'confirm'])->name('imports.assignments.confirm');
+    Route::post('/imports/assignments/cancel',       [ImportAssignmentsController::class,'cancel'])->name('imports.assignments.cancel');
 });
 
 require __DIR__.'/auth.php';
