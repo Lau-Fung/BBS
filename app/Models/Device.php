@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Concerns\HasAttachments;
 
 class Device extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasAttachments;
     
     protected $fillable = ['imei','device_model_id','firmware','is_active'];
     protected $casts = ['is_active'=>'bool'];
@@ -18,5 +19,11 @@ class Device extends Model
 
     public function assignments() { 
         return $this->hasMany(Assignment::class); 
+    }
+
+    // FK: devices.device_model_id -> device_models.id
+    public function deviceModel()
+    {
+        return $this->belongsTo(DeviceModel::class);
     }
 }
