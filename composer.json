@@ -8,18 +8,19 @@
     "require": {
         "php": "^8.2",
         "anhskohbo/no-captcha": "*",
-        "laravel/fortify": "*",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^3.1.60",
         "pragmarx/google2fa-laravel": "*",
-        "spatie/laravel-permission": "*",
-        "spatie/laravel-query-builder": "^6.3"
+        "spatie/laravel-query-builder": "^6.3",
+
+        "laravel/breeze": "^2.3",
+        "laravel/fortify": "^1.30",
+        "spatie/laravel-permission": "^6.21"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "laravel-lang/publisher": "*",
-        "laravel/breeze": "*",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
