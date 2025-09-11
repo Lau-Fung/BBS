@@ -64,6 +64,7 @@
                                 <li>
                                     <a class="dropdown-item" href="{{ route('profile.edit') }}">{{ __('Profile') }}</a>
                                 </li>
+                                <li><a class="dropdown-item" href="{{ route('profile.security') }}">{{ __('Security') }}</a></li>
                                 <li><hr class="dropdown-divider"></li>
                             @endif
                             <li>

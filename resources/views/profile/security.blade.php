@@ -1,3 +1,4 @@
+{{-- resources/views/profile/security.blade.php --}}
 <x-app-layout>
     <x-slot name="header">
         <h2 class="h4 font-weight-bold">
@@ -7,27 +8,40 @@
 
     <div class="container mt-4" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 
+        {{-- flash messages --}}
+        @if (session('status'))
+            <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
+                </ul>
+            </div>
+        @endif
+
+        {{-- Not enabled yet --}}
         @if (! auth()->user()->two_factor_secret)
-            {{-- Enable 2FA --}}
             <form method="POST" action="{{ url('/user/two-factor-authentication') }}">
                 @csrf
                 <button class="btn btn-primary">{{ __('Enable 2FA') }}</button>
             </form>
+
         @else
-            {{-- 2FA Enabled --}}
+            {{-- Enabled --}}
             <div class="alert alert-success">{{ __('2FA is enabled.') }}</div>
 
-            {{-- QR Code --}}
+            {{-- QR code (INLINE SVG, not <img>) --}}
             <div class="mb-4">
-                <h5>{{ __('Scan this QR code in Google Authenticator') }}</h5>
-                <div class="p-3 border rounded bg-white d-inline-block">
-                    <img src="{{ route('two-factor.qr-code') }}" alt="2FA QR Code" width="200">
+                <h5 class="mb-2">{{ __('Scan this QR code in Google Authenticator') }}</h5>
+                <div class="p-3 border rounded bg-white d-inline-block" style="max-width: 280px;">
+                    {!! auth()->user()->twoFactorQrCodeSvg() !!}
                 </div>
             </div>
 
-            {{-- Recovery Codes --}}
+            {{-- Recovery codes --}}
             <div class="mb-4">
-                <h5>{{ __('Recovery Codes') }}</h5>
+                <h5 class="mb-2">{{ __('Recovery Codes') }}</h5>
 
                 @php
                     $codes = null;
@@ -39,7 +53,9 @@
                 @endphp
 
                 @if (is_array($codes) && count($codes))
-                    <pre class="bg-light p-3 rounded">{{ implode(PHP_EOL, $codes) }}</pre>
+                    <pre class="bg-light p-3 rounded" style="white-space: pre-line;">
+{{ implode(PHP_EOL, $codes) }}
+                    </pre>
                 @else
                     <p class="text-muted">{{ __('No recovery codes found.') }}</p>
                 @endif
@@ -57,6 +73,5 @@
                 <button class="btn btn-danger">{{ __('Disable 2FA') }}</button>
             </form>
         @endif
-
     </div>
 </x-app-layout>
