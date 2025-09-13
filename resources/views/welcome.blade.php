@@ -29,22 +29,22 @@
 </head>
 <body>
     <div class="overlay">
-        <h1 class="display-4 fw-bold">Excel Management System</h1>
-        <p class="lead">Welcome to your smart and secure business data platform</p>
+        <h1 class="display-4 fw-bold">{{ __('messages.excel_management_system') }}</h1>
+        <p class="lead">{{ __('messages.welcome') }}</p>
 
         <div class="mt-4">
             @if (Route::has('login'))
                 @auth
                     <a href="{{ url('/dashboard') }}" class="btn btn-success btn-lg">
-                        <i class="bi bi-speedometer2"></i> Dashboard
+                        <i class="bi bi-speedometer2"></i> {{ __('messages.auth.dashboard') }}
                     </a>
                 @else
                     <a href="{{ route('login') }}" class="btn btn-primary btn-lg me-2">
-                        <i class="bi bi-box-arrow-in-right"></i> Log In
+                        <i class="bi bi-box-arrow-in-right"></i> {{ __('messages.auth.login') }}
                     </a>
                     @if (Route::has('register'))
                         <a href="{{ route('register') }}" class="btn btn-outline-light btn-lg">
-                            <i class="bi bi-person-plus"></i> Register
+                            <i class="bi bi-person-plus"></i> {{ __('messages.auth.register') }}
                         </a>
                     @endif
                 @endauth

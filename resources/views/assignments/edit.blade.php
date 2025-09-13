@@ -54,7 +54,7 @@
                     </div>
                     <form method="POST" action="{{ route('attachments.destroy', $att) }}">
                     @csrf @method('DELETE')
-                    <button class="text-red-600 hover:underline" onclick="return confirm('Delete this file?')">Delete</button>
+                    <button class="text-red-600 hover:underline" onclick="return confirm('Delete this file?')">{{ __('messages.common.delete') }}</button>
                     </form>
                 </li>
                 @empty

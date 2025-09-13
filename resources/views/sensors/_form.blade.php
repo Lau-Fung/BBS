@@ -6,16 +6,16 @@
 		<svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
 		</svg>
-		Sensor Details
+		{{ __('messages.sensors.details') }}
 	</h2>
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 		<div class="space-y-2">
-			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Serial / BT ID</label>
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('messages.sensors.serial') }}</label>
 			<input class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" name="serial_or_bt_id" value="{{ old('serial_or_bt_id', $sensor->serial_or_bt_id ?? '') }}" required>
 			@error('serial_or_bt_id')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
 		</div>
 		<div class="space-y-2">
-			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('messages.sensors.model') }}</label>
 			<select class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" name="sensor_model_id">
 				<option value="">—</option>
 				@foreach($sensorModels as $m)
@@ -24,7 +24,7 @@
 			</select>
 		</div>
 		<div class="md:col-span-2 space-y-2">
-			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('messages.sensors.notes') }}</label>
 			<input class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" name="notes" value="{{ old('notes', $sensor->notes ?? '') }}">
 		</div>
 	</div>
@@ -36,7 +36,7 @@
 		<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
 		</svg>
-		Save
+		{{ __('messages.common.save') }}
 	</button>
-	<a href="{{ route('sensors.index') }}" class="px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors duration-200">Cancel</a>
+	<a href="{{ route('sensors.index') }}" class="px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors duration-200">{{ __('messages.common.cancel') }}</a>
 </div>

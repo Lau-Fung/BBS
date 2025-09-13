@@ -10,7 +10,7 @@
 
         <!-- Email -->
         <div>
-            <x-input-label for="email" :value="__('Email')" />
+            <x-input-label for="email" :value="__('messages.auth.email')" />
             <x-text-input id="email" class="block mt-1 w-full"
                           type="email" name="email" :value="old('email')"
                           required autofocus autocomplete="username" />
@@ -19,7 +19,7 @@
 
         <!-- Password -->
         <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+            <x-input-label for="password" :value="__('messages.auth.password')" />
             <x-text-input id="password" class="block mt-1 w-full"
                           type="password" name="password"
                           required autocomplete="current-password" />
@@ -30,7 +30,7 @@
         <div class="block mt-4">
             <label for="remember_me" class="inline-flex items-center">
                 <input id="remember_me" type="checkbox" class="rounded border-gray-300" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+                <span class="ms-2 text-sm text-gray-600">{{ __('messages.auth.remember') }}</span>
             </label>
         </div>
 
@@ -46,12 +46,12 @@
             @if (Route::has('password.request'))
                 <a class="underline text-sm text-gray-600 hover:text-gray-900"
                    href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
+                    {{ __('messages.auth.forgot') }}
                 </a>
             @endif
 
             <x-primary-button class="ms-3" id="login-btn">
-                {{ __('Log in') }}
+                {{ __('messages.auth.login') }}
             </x-primary-button>
         </div>
     </form>

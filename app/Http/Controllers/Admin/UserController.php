@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -25,15 +28,40 @@ class UserController extends Controller
      */
     public function create()
     {
-        //
+        $roles = Role::orderBy('name')->pluck('name','id'); // for dropdown
+        return view('admin.users.create', compact('roles'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        //
+        // create user
+        $data = $request->validated();
+
+        $user = new User();
+        $user->name  = $data['name'];
+        $user->email = $data['email'];
+        $user->password = Hash::make($data['password'] ?? str()->random(16));
+        $user->email_verified_at = $request->boolean('verified') ? now() : null;
+        $user->save();
+
+        // assign role(s)
+        if (!empty($data['roles'])) {
+            $guard = config('auth.defaults.guard', 'web');
+
+            $roles = collect($data['roles'])->map(function ($value) use ($guard) {
+                return is_numeric($value)
+                    ? Role::findById((int) $value, $guard)   // resolve id → Role
+                    : Role::findByName($value, $guard);      // resolve name → Role
+            })->filter(); // drop nulls
+
+            $user->syncRoles($roles);
+        }
+
+        return redirect()->route('admin.users.index')
+            ->with('status', 'User created successfully.');
     }
 
     /**

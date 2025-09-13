@@ -65,7 +65,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth','role:Admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->only(['index','edit','update']);
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->only(['index','create','store','edit','update','destroy']);
     
     // Domain records (role/permission-based)
     // Route::prefix('records')->name('records.')->group(function () {
