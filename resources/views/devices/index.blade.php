@@ -14,8 +14,8 @@
 		<div class="mb-8">
 			<div class="flex flex-col sm:flex-row sm:justify-between">
 				<div class="mb-4 sm:mb-0">
-					<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Devices</h1>
-					<p class="mt-2 text-gray-600 dark:text-gray-400">Manage device inventory and activation</p>
+					<h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ __('messages.devices.new') }}</h1>
+					<p class="mt-2 text-gray-600 dark:text-gray-400">{{ __('messages.devices.subtitle') }}</p>
 				</div>
 				<div class="flex flex-col sm:flex-row gap-3 sm:items-center">
 					<a href="{{ route('devices.create') }}" 
@@ -23,7 +23,7 @@
 						<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
 						</svg>
-						New Device
+						{{ __('messages.devices.new') }}
 					</a>
 				</div>
 			</div>
@@ -36,24 +36,24 @@
 					<svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
 					</svg>
-					Filters
+					{{ __('messages.devices.new') }}Filters
 				</h2>
 
 				<form method="GET" class="space-y-4">
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
 						<div class="md:col-span-2 lg:col-span-2">
-							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
+							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.common.search') }}</label>
 							<input type="text" 
 								   name="filter[q]" 
 								   value="{{ request('filter.q') }}" 
-								   placeholder="Search IMEI..." 
+								   placeholder="{{ __('messages.devices.filters_search_ph') }}" 
 								   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
 						</div>
 
 						<div>
-							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Device Model</label>
+							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.devices.filters_model') }}</label>
 							<select name="filter[device_model_id]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-								<option value="">All Models</option>
+								<option value="">{{ __('messages.devices.filters_all_models') }}</option>
 								@foreach($deviceModels as $m)
 									<option value="{{ $m->id }}" @selected(request('filter.device_model_id')==$m->id)>{{ $m->name }}</option>
 								@endforeach
@@ -61,11 +61,11 @@
 						</div>
 
 						<div>
-							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Active</label>
+							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.devices.active') }}</label>
 							<select name="filter[is_active]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-								<option value="">All</option>
-								<option value="1" @selected(request('filter.is_active')==='1')>Yes</option>
-								<option value="0" @selected(request('filter.is_active')==='0')>No</option>
+								<option value="">{{ __('messages.devices.filters_all') }}</option>
+								<option value="1" @selected(request('filter.is_active')==='1')>{{ __('messages.common.yes') }}</option>
+								<option value="0" @selected(request('filter.is_active')==='0')>{{ __('messages.common.no') }}</option>
 							</select>
 						</div>
 					</div>
@@ -75,13 +75,13 @@
 							<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
 							</svg>
-							Apply Filters
+							{{ __('messages.devices.filters_apply') }}
 						</button>
 						<a href="{{ route('devices.index') }}" class="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors duration-200 shadow-sm">
 							<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
 							</svg>
-							Reset Filters
+							{{ __('messages.devices.filters_reset') }}
 						</a>
 					</div>
 				</form>
@@ -91,7 +91,7 @@
 		<!-- Results Summary -->
 		<div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
 			<div class="text-sm text-gray-600 dark:text-gray-400">
-				Showing {{ $devices->firstItem() ?? 0 }} to {{ $devices->lastItem() ?? 0 }} of {{ $devices->total() }} devices
+				{{ __('messages.devices.filters_showing') }} {{ $devices->firstItem() ?? 0 }} to {{ $devices->lastItem() ?? 0 }} of {{ $devices->total() }} {{ __('messages.devices.title') }}
 			</div>
 		</div>
 
@@ -105,7 +105,7 @@
 							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Model</th>
 							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Firmware</th>
 							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{!! sort_link('is_active','Active') !!}</th>
-							<th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+							<th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ __('messages.table.actions') }}</th>
 						</tr>
 					</thead>
 					<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -123,10 +123,10 @@
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 									<div class="flex items-center justify-end space-x-2">
-										<a href="{{ route('devices.edit',$d) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300" style="padding-right: 10px;">Edit</a>
+										<a href="{{ route('devices.edit',$d) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300" style="padding-right: 10px;">{{ __('messages.common.edit') }}</a>
 										<form action="{{ route('devices.destroy',$d) }}" method="POST" class="inline" onsubmit="return confirm('Delete this device?')">
 											@csrf @method('DELETE')
-											<button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">Delete</button>
+											<button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">{{ __('messages.common.delete') }}</button>
 										</form>
 										@if(method_exists($d, 'trashed') && $d->trashed())
 											<form action="{{ route('devices.restore',$d->id) }}" method="POST" class="inline">
@@ -144,14 +144,14 @@
 										<svg class="mx-auto h-9 w-9 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
 										</svg>
-										<h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No devices found</h3>
-										<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by creating a new device.</p>
+										<h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">{{ __('messages.devices.new') }}No devices found</h3>
+										<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ __('messages.devices.new') }}Get started by creating a new device.</p>
 										<div class="mt-6">
 											<a href="{{ route('devices.create') }}" class="inline-flex items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
 												<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
 												</svg>
-												New Device
+												{{ __('messages.devices.new') }}New Device
 											</a>
 										</div>
 									</div>

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Edit Roles') }} — {{ $user->name }}
+            {{ __('messages.users.edit_role') }} — {{ $user->name }}
         </h2>
     </x-slot>
 
@@ -18,7 +18,7 @@
                     @csrf @method('PUT')
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium">{{ __('Roles') }}</label>
+                        <label class="block text-sm font-medium">{{ __('messages.table.roles') }}</label>
                         <div class="flex flex-wrap gap-4">
                             @foreach($roles as $role)
                                 <label class="inline-flex items-center gap-2">

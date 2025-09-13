@@ -16,27 +16,27 @@
             @role('Admin')
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('assignments.*') ? 'active fw-bold' : '' }}" href="{{ route('assignments.index') }}">Assignments</a>
+                        <a class="nav-link {{ request()->routeIs('assignments.*') ? 'active fw-bold' : '' }}" href="{{ route('assignments.index') }}">{{ __('messages.nav.assignments') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('vehicles.*') ? 'active fw-bold' : '' }}" href="{{ route('vehicles.index') }}">Vehicles</a>
+                        <a class="nav-link {{ request()->routeIs('vehicles.*') ? 'active fw-bold' : '' }}" href="{{ route('vehicles.index') }}">{{ __('messages.nav.vehicles') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('devices.*') ? 'active fw-bold' : '' }}" href="{{ route('devices.index') }}">Devices</a>
+                        <a class="nav-link {{ request()->routeIs('devices.*') ? 'active fw-bold' : '' }}" href="{{ route('devices.index') }}">{{ __('messages.nav.devices') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('sims.*') ? 'active fw-bold' : '' }}" href="{{ route('sims.index') }}">SIMs</a>
+                        <a class="nav-link {{ request()->routeIs('sims.*') ? 'active fw-bold' : '' }}" href="{{ route('sims.index') }}">{{ __('messages.nav.sims') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('sensors.*') ? 'active fw-bold' : '' }}" href="{{ route('sensors.index') }}">Sensors</a>
+                        <a class="nav-link {{ request()->routeIs('sensors.*') ? 'active fw-bold' : '' }}" href="{{ route('sensors.index') }}">{{ __('messages.nav.sensors') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('carriers.*') ? 'active fw-bold' : '' }}" href="{{ route('carriers.index') }}">Carriers</a>
+                        <a class="nav-link {{ request()->routeIs('carriers.*') ? 'active fw-bold' : '' }}" href="{{ route('carriers.index') }}">{{ __('messages.nav.carriers') }}</a>
                     </li>
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active fw-bold' : '' }}"
                             href="{{ route('admin.users.index') }}">
-                                {{ __('messages.user_management') }}
+                                {{ __('messages.nav.user_management') }}
                             </a>
                         </li>
                 </ul>
@@ -62,15 +62,15 @@
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDrop">
                             @if(Route::has('profile.edit'))
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('profile.edit') }}">{{ __('Profile') }}</a>
+                                    <a class="dropdown-item" href="{{ route('profile.edit') }}">{{ __('messages.nav.profile') }}</a>
                                 </li>
-                                <li><a class="dropdown-item" href="{{ route('profile.security') }}">{{ __('Security') }}</a></li>
+                                <li><a class="dropdown-item" href="{{ route('profile.security') }}">{{ __('messages.nav.security') }}</a></li>
                                 <li><hr class="dropdown-divider"></li>
                             @endif
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="dropdown-item">{{ __('Log Out') }}</button>
+                                    <button type="submit" class="dropdown-item">{{ __('messages.nav.logout') }}</button>
                                 </form>
                             </li>
                         </ul>

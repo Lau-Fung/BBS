@@ -60,7 +60,7 @@
                     <!-- Search and Basic Filters -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                         <div class="md:col-span-2 lg:col-span-1">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.common.search') }}</label>
                             <input type="text" 
                                    name="filter[q]" 
                                    value="{{ request('filter.q') }}" 
@@ -349,7 +349,7 @@
                             </div>
                         @endif
                         <div>
-                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</p>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('messages.table.created') }}</p>
                             <p class="text-sm text-gray-900 dark:text-white">{{ $assignment->created_at->format('Y-m-d') }}</p>
                         </div>
                     </div>
