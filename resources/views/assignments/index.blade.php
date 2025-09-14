@@ -4,8 +4,8 @@
         <div class="mb-8">
             <div class="flex flex-col sm:flex-row sm:justify-between">
                 <div class="mb-4 sm:mb-0">
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Assignments</h1>
-                    <p class="mt-2 text-gray-600 dark:text-gray-400">Manage device assignments and installations</p>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ __('messages.assignments.title') }}</h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">{{ __('messages.assignments.subtitle') }}</p>
                 </div>
                 <div class="flex flex-row gap-3 justify-center items-center">
                     <a href="{{ route('assignments.create') }}" 
@@ -14,7 +14,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
-                        New Assignment
+                        {{ __('messages.assignments.new') }}
                     </a>
                     <a href="{{ route('imports.assignments.form') }}" 
                     class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
@@ -22,7 +22,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                 d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
                         </svg>
-                        Import from Excel
+                        {{ __('messages.assignments.import_from_excel') }}
                     </a>
                     <a href="{{ route('exports.assignments', ['format' => 'xlsx']) }}" 
                     class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
@@ -31,7 +31,7 @@
                             d="M4 8V6a2 2 0 012-2h12a2 2 0 012 2v2M7 14l5-5m0 0l5 5m-5-5v12" />
                         </svg>
 
-                        Export XLSX
+                        {{ __('messages.assignments.export_xlsx') }}
                     </a>
                     <a href="{{ route('exports.assignments', ['format' => 'csv']) }}" 
                     class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
@@ -40,7 +40,7 @@
                             d="M4 8V6a2 2 0 012-2h12a2 2 0 012 2v2M7 14l5-5m0 0l5 5m-5-5v12" />
                         </svg>
 
-                        Export CSV
+                        {{ __('messages.assignments.export_csv') }} 
                     </a>
                 </div>
             </div>
@@ -53,7 +53,7 @@
                     <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
                     </svg>
-                    Filters
+                    {{ __('messages.assignments.filters_title') }}
                 </h2>
                 
                 <form method="GET" class="space-y-4">
@@ -64,14 +64,14 @@
                             <input type="text" 
                                    name="filter[q]" 
                                    value="{{ request('filter.q') }}" 
-                                   placeholder="Plate, IMEI, MSISDN, Sensor..." 
+                                   placeholder="{{ __('messages.assignments.filters_search_ph') }}" 
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Device Model</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.assignments.filters_device_model') }}</label>
                             <select name="filter[device_model_id]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                                <option value="">All Models</option>
+                                <option value="">{{ __('messages.assignments.filters_all_models') }}</option>
                                 @foreach($deviceModels as $model)
                                     <option value="{{ $model->id }}" @selected(request('filter.device_model_id') == $model->id)>{{ $model->name }}</option>
                                 @endforeach
@@ -79,9 +79,9 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Carrier</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.assignments.filters_carrier') }}</label>
                             <select name="filter[carrier_id]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                                <option value="">All Carriers</option>
+                                <option value="">{{ __('messages.assignments.filters_all_carriers') }}</option>
                                 @foreach($carriers as $carrier)
                                     <option value="{{ $carrier->id }}" @selected(request('filter.carrier_id') == $carrier->id)>{{ $carrier->name }}</option>
                                 @endforeach
@@ -89,9 +89,9 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vehicle Status</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.assignments.filters_vehicle_status') }}</label>
                             <select name="filter[vehicle_status]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                                <option value="">All Statuses</option>
+                                <option value="">{{ __('messages.assignments.filters_all_status') }}</option>
                                 @foreach($vehicleStatuses as $status)
                                     <option value="{{ $status }}" @selected(request('filter.vehicle_status') == $status)>{{ $status }}</option>
                                 @endforeach
@@ -99,11 +99,11 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Installation</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.assignments.filters_installation') }}</label>
                             <select name="filter[is_installed]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                                <option value="">All</option>
-                                <option value="1" @selected(request('filter.is_installed') === '1')>Installed</option>
-                                <option value="0" @selected(request('filter.is_installed') === '0')>Not Installed</option>
+                                <option value="">{{ __('messages.assignments.filters_all') }}</option>
+                                <option value="1" @selected(request('filter.is_installed') === '1')>{{ __('messages.assignments.filters_installed') }}</option>
+                                <option value="0" @selected(request('filter.is_installed') === '0')>{{ __('messages.assignments.filters_not_installed') }}</option>
                             </select>
                         </div>
                     </div>
@@ -111,7 +111,7 @@
                     <!-- Date and Capacity Filters -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SIM Expiry From</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.assignments.filters_sim_expiry_from') }}</label>
                             <input type="date" 
                                    name="filter[expiry_from]" 
                                    value="{{ request('filter.expiry_from') }}" 
@@ -119,7 +119,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SIM Expiry To</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.assignments.filters_sim_expiry_to') }}</label>
                             <input type="date" 
                                    name="filter[expiry_to]" 
                                    value="{{ request('filter.expiry_to') }}" 
@@ -127,20 +127,20 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Capacity Min (L)</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.assignments.filters_capacity_min') }}</label>
                             <input type="number" 
                                    name="filter[capacity_min]" 
                                    value="{{ request('filter.capacity_min') }}" 
-                                   placeholder="Min capacity" 
+                                   placeholder="{{ __('messages.assignments.filters_showing') }}" 
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Capacity Max (L)</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('messages.assignments.filters_capacity_max') }}</label>
                             <input type="number" 
                                    name="filter[capacity_max]" 
                                    value="{{ request('filter.capacity_max') }}" 
-                                   placeholder="Max capacity" 
+                                   placeholder="{{ __('messages.assignments.filters_showing') }}" 
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         </div>
                     </div>
@@ -151,13 +151,13 @@
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
                             </svg>
-                            Apply Filters
+                            {{ __('messages.assignments.filters_apply') }}
                         </button>
                         <a href="{{ route('assignments.index') }}" class="flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors duration-200 shadow-sm">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
-                            Reset Filters
+                            {{ __('messages.assignments.filters_reset') }}
                         </a>
                     </div>
                 </form>
@@ -167,12 +167,12 @@
         <!-- Results Summary -->
         <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div class="text-sm text-gray-600 dark:text-gray-400">
-                Showing {{ $assignments->firstItem() ?? 0 }} to {{ $assignments->lastItem() ?? 0 }} of {{ $assignments->total() }} assignments
+                {{ __('messages.assignments.filters_showing') }} {{ $assignments->firstItem() ?? 0 }} to {{ $assignments->lastItem() ?? 0 }} of {{ $assignments->total() }} {{ __('messages.assignments.title') }}
             </div>
             <div class="mt-2 sm:mt-0">
-                <select id="viewMode" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    <option value="table">Table View</option>
-                    <option value="cards">Card View</option>
+                <select id="viewMode" class="border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                    <option value="table">{{ __('messages.assignments.table_view') }}</option>
+                    <option value="cards">{{ __('messages.assignments.card_view') }}</option>
                 </select>
             </div>
         </div>
@@ -293,14 +293,14 @@
                                         <svg class="mx-auto h-9 w-9 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                         </svg>
-                                        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No assignments found</h3>
-                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by creating a new assignment.</p>
+                                        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">{{ __('messages.assignments.empty') }}</h3>
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ __('messages.assignments.get_started') }}</p>
                                         <div class="mt-6">
                                             <a href="{{ route('assignments.create') }}" class="inline-flex items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
                                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                                 </svg>
-                                                New Assignment
+                                                {{ __('messages.assignments.new') }}
                                             </a>
                                         </div>
                                     </div>
@@ -357,7 +357,7 @@
                     <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                         <a href="{{ route('assignments.edit', $assignment) }}" 
                            class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200">
-                            Edit
+                            {{ __('messages.assignments.filters_showing') }}Edit
                         </a>
                         <form action="{{ route('assignments.destroy', $assignment) }}" 
                               method="POST" 
@@ -365,7 +365,7 @@
                               onsubmit="return confirm('Are you sure you want to delete this assignment?')">
                             @csrf @method('DELETE')
                             <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors duration-200">
-                                Delete
+                                {{ __('messages.assignments.filters_showing') }}Delete
                             </button>
                         </form>
                         @if(method_exists($assignment, 'trashed') && $assignment->trashed())
@@ -386,14 +386,14 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No assignments found</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-sm">Get started by creating your first assignment to manage devices and vehicles.</p>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ __('messages.assignments.empty') }}</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-sm">{{ __('messages.assignments.get_started') }}</p>
                         <a href="{{ route('assignments.create') }}" 
                            class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-sm">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
-                            Create New Assignment
+                            {{ __('messages.assignments.new') }}
                         </a>
                     </div>
                 </div>

@@ -10,7 +10,7 @@ class Vehicle extends Model
 {
     use SoftDeletes, HasAttachments;
     
-    protected $fillable = ['plate','tank_capacity_liters','status','crm_no','notes','supervisor_user_id'];
+    protected $fillable = ['plate','tank_capacity_liters','status','crm_no','notes','supervisor_user_id', 'client_id'];
 
     public function supervisor() { 
         return $this->belongsTo(User::class, 'supervisor_user_id'); 
@@ -27,5 +27,10 @@ class Vehicle extends Model
     public function assignments()
     {
         return $this->hasMany(Assignment::class);
+    }
+
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
     }
 }

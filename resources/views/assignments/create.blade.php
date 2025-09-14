@@ -1,7 +1,7 @@
 <x-app-layout>
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 		<div class="mb-8 flex items-center justify-between">
-			<h1 class="text-3xl font-bold text-gray-900 dark:text-white">New Assignment</h1>
+			<h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ __('messages.assignments.new') }}</h1>
 			<a href="{{ route('assignments.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg">{{ __('messages.common.back') }}</a>
 		</div>
 

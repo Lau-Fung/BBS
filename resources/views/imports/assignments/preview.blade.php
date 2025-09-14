@@ -34,18 +34,28 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Preview Import
+            {{ __('messages.assignments.preview_import') }}
         </h2>
     </x-slot>
 
     <div class="py-6">
         <div class="max-w-12xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                @if(!empty($sheetDefaults))
+                    <div class="mb-4 rounded-md border border-blue-200 bg-blue-50 p-3 text-blue-800">
+                        <div class="font-semibold mb-1">{{ __('messages.assignments.sheet_defaults_detected') }}:</div>
+                        <ul class="list-disc ps-5">
+                            @if(!empty($sheetDefaults['client_name']))<li>{{ __('messages.assignments.client') }}: <strong>{{ $sheetDefaults['client_name'] }}</strong></li>@endif
+                            @if(!empty($sheetDefaults['sector']))<li>{{ __('messages.clients.sector') }}: <strong>{{ $sheetDefaults['sector'] }}</strong></li>@endif
+                            @if(!empty($sheetDefaults['subscription_type']))<li>{{ __('messages.clients.subscription') }}: <strong>{{ $sheetDefaults['subscription_type'] }}</strong></li>@endif
+                        </ul>
+                    </div>
+                @endif
 
                 <div class="mb-4 text-sm text-gray-700 flex gap-6">
-                    <div>Total rows: <strong>{{ $summary['total'] ?? 0 }}</strong></div>
-                    <div>Valid rows: <strong>{{ $summary['valid'] ?? 0 }}</strong></div>
-                    <div>Invalid rows: <strong>{{ $summary['invalid'] ?? 0 }}</strong></div>
+                    <div>{{ __('messages.assignments.total_rows') }}: <strong>{{ $summary['total'] ?? 0 }}</strong></div>
+                    <div>{{ __('messages.assignments.valid_rows') }}: <strong>{{ $summary['valid'] ?? 0 }}</strong></div>
+                    <div>{{ __('messages.assignments.invalid_rows') }}: <strong>{{ $summary['invalid'] ?? 0 }}</strong></div>
                 </div>
 
                 @if(!empty($fatal ?? []))
@@ -60,11 +70,11 @@
 
                 @if(!empty($issues ?? []))
                     <div class="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 scroll">
-                        <div class="font-semibold mb-1">Issues detected:</div>
+                        <div class="font-semibold mb-1">{{ __('messages.assignments.issues_detected') }}:</div>
                         <ul class="list-disc ps-5 max-h-64 overflow-auto">
                             @foreach($issues as $issue)
                                 @foreach(($issue['messages'] ?? []) as $m)
-                                    <li>Row {{ $issue['row'] }}: {{ $m }}</li>
+                                    <li>{{ __('messages.assignments.row') }} {{ $issue['row'] }}: {{ $m }}</li>
                                 @endforeach
                             @endforeach
                         </ul>
@@ -113,29 +123,35 @@
 
                 <div class="mt-3 text-sm text-gray-600 space-x-3 rtl:space-x-reverse">
                     <span class="inline-block px-2 py-1 border rounded bg-red-50 text-red-800 border-red-300">
-                        Error / Required / Already exists
+                        {{ __('messages.assignments.error_required_already_exists') }}
                     </span>
                     <span class="inline-block px-2 py-1 border rounded bg-amber-50 text-amber-800 border-amber-300">
-                        Duplicate in this file
+                        {{ __('messages.assignments.duplicate') }}
                     </span>
-                    <span class="inline-block px-2 py-1 border rounded">No issues</span>
+                    <span class="inline-block px-2 py-1 border rounded">{{ __('messages.assignments.no_issues') }}</span>
                 </div>
 
                 <div class="mt-6 flex items-center gap-3">
                     <a href="{{ route('imports.assignments.form') }}" class="text-gray-600 hover:underline">
-                        Back to upload
+                        {{ __('messages.assignments.back_to_upload') }}
                     </a>
 
                     @if(($canConfirm ?? false) === true)
-                        <form method="post" action="{{ route('imports.assignments.confirm') }}">
+                        <form class="mt-3" method="post" action="{{ route('imports.assignments.confirm') }}">
                             @csrf
-                            <x-primary-button>Confirm import</x-primary-button>
+                            {{-- carry sheet defaults forward --}}
+                            <input type="hidden" name="default_client_name" value="{{ $sheetDefaults['client_name'] ?? '' }}">
+                            <input type="hidden" name="default_sector" value="{{ $sheetDefaults['sector'] ?? '' }}">
+                            <input type="hidden" name="default_subscription_type" value="{{ $sheetDefaults['subscription_type'] ?? '' }}">
+                            {{-- also carry the form’s selected client (if any) --}}
+                            <input type="hidden" name="client_id" value="{{ $defaultClientId ?? '' }}">
+                            <x-primary-button>{{ __('messages.assignments.confirm_import') }}</x-primary-button>
                         </form>
                     @else
                         <button disabled
                                 class="inline-flex items-center px-4 py-2 rounded bg-gray-400 cursor-not-allowed"
                                 title="Fix the highlighted errors to enable import">
-                            Confirm import
+                            {{ __('messages.assignments.confirm_import') }}
                         </button>
                     @endif
                 </div>

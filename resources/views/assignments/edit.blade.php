@@ -4,15 +4,15 @@
         <div class="mb-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Edit Assignment</h1>
-                    <p class="mt-2 text-gray-600 dark:text-gray-400">Update device assignment details</p>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ __('messages.assignments.edit') }}</h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">{{ __('messages.assignments.update_device_assignment_details') }}</p>
                 </div>
                 <a href="{{ route('assignments.index') }}" 
                    class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors duration-200">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
-                    Back to Assignments
+                    {{ __('messages.assignments.back_to_assignments') }}
                 </a>
             </div>
         </div>
@@ -23,26 +23,26 @@
         <input type="hidden" name="attachable_type" value="assignment">  {{-- uses morphMap key --}}
         <input type="hidden" name="attachable_id" value="{{ $assignment->id }}">
         <div>
-            <label class="block text-sm font-medium mb-1">Category</label>
+            <label class="block text-sm font-medium mb-1">{{ __('messages.assignments.category') }}</label>
             <select name="category" class="border rounded p-2">
                 <option value="">—</option>
-                <option class="pr-4" value="contract">Contract</option>
-                <option value="photo">Photo</option>
-                <option value="invoice">Invoice</option>
-                <option value="other">Other</option>
+                <option class="pr-4" value="contract">{{ __('messages.assignments.contract') }}</option>
+                <option value="photo">{{ __('messages.assignments.photo') }}</option>
+                <option value="invoice">{{ __('messages.assignments.invoice') }}</option>
+                <option value="other">{{ __('messages.assignments.other') }}</option>
             </select>
         </div>
         <div class="mb-2">
-            <label class="block text-sm font-medium mb-1">Files</label>
+            <label class="block text-sm font-medium mb-1">{{ __('messages.assignments.files') }}</label>
             <input type="file" name="files[]" multiple class="border rounded p-2 w-full">
             @error('files.*') <div class="text-red-600 text-sm mt-1">{{ $message }}</div> @enderror
         </div>
-        <x-primary-button>Upload</x-primary-button>
+        <x-primary-button>{{ __('messages.assignments.upload') }}</x-primary-button>
         </form>
 
         {{-- List --}}
         <div class="mt-6 mb-2">
-            <h3 class="font-semibold mb-2">Attachments</h3>
+            <h3 class="font-semibold mb-2">{{ __('messages.assignments.attachments') }}</h3>
             <ul class="divide-y border rounded">
                 @forelse($assignment->attachments as $att)
                 <li class="flex items-center justify-between p-3">
@@ -58,7 +58,7 @@
                     </form>
                 </li>
                 @empty
-                <li class="p-3 text-gray-500">No attachments yet.</li>
+                <li class="p-3 text-gray-500">{{ __('messages.assignments.no_asstachments_yet') }}</li>
                 @endforelse
             </ul>
         </div>
