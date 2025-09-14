@@ -666,13 +666,32 @@ class ImportAssignmentsController extends Controller
         return $v ? strtoupper($v) : null;
     }
 
+    private function expandSci($v): string
+    {
+        $s = trim((string)$v);
+        if (!preg_match('/^([0-9]+(?:\.[0-9]+)?)e\+?(-?\d+)$/i', $s, $m)) {
+            return $s;
+        }
+        $mant = $m[1]; $exp = (int)$m[2];
+        $mant = ltrim($mant, '+');
+        if (str_contains($mant, '.')) {
+            [$int, $frac] = explode('.', $mant, 2);
+        } else {
+            $int = $mant; $frac = '';
+        }
+        $digits = $int.$frac;
+        $shift  = $exp - strlen($frac);
+        return $shift >= 0 ? $digits.str_repeat('0', $shift)
+                        : substr($digits, 0, strlen($digits)+$shift); // not expected here
+    }
+
 
     private function coerceRow(array $row): array
     {
         // Always treat identifiers as strings to avoid scientific notation
         foreach (['imei','sim_serial','msisdn','serial','plate'] as $k) {
-            if (array_key_exists($k, $row)) {
-                $row[$k] = isset($row[$k]) ? (string)$row[$k] : '';
+            if (array_key_exists($k, $row) && is_string($row[$k]) && stripos($row[$k], 'e+') !== false) {
+                $row[$k] = $this->expandSci($row[$k]);
             }
         }
 
