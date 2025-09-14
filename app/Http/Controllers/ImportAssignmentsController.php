@@ -41,6 +41,7 @@ class ImportAssignmentsController extends Controller
         ]);
 
         $file = $request->file('file');
+        $defaultClientId = $request->integer('client_id') ?: null;
 
         // Read first sheet as raw 2D array (no heading row mapping here)
         $sheets = Excel::toArray(new \App\Imports\GenericArrayImport, $file);
@@ -61,6 +62,12 @@ class ImportAssignmentsController extends Controller
             $mappedKeys[] = $this->translateHeader((string) $cell) ?? trim((string) $cell);
         }
 
+        // NEW: read banner values and persist for confirm()
+        $sheetDefaults = $this->extractBannerDefaultsFromArray($raw);
+        session()->put('import.assignments.defaults', $sheetDefaults);
+        // allow an explicit client picked on the form to override
+        $defaultClientId = $request->integer('client_id') ?: null;
+
         // 2) Slice data rows after header
         $dataRows = array_slice($raw, $headerIdx + 1);
 
@@ -74,6 +81,7 @@ class ImportAssignmentsController extends Controller
             $r = array_values($r);
             $assoc = [];
             foreach ($mappedKeys as $i => $key) {
+                if (!$key) continue;
                 $assoc[$key] = $r[$i] ?? null;
             }
             $rows[] = $this->coerceRow($assoc);
@@ -82,6 +90,8 @@ class ImportAssignmentsController extends Controller
         // 4) Fail fast if required columns are missing
         $requiredCols = ['imei']; // add more if they must exist in the sheet
         $missing = array_diff($requiredCols, $this->presentColumns($mappedKeys));
+        Log::info('mappedKeys', $mappedKeys);
+
         if (!empty($missing)) {
             return view('imports.assignments.preview', [
                 'fileName'   => $file->getClientOriginalName(),
@@ -92,6 +102,8 @@ class ImportAssignmentsController extends Controller
                 'fatal'      => ['Missing required column(s): ' . implode(', ', array_map('strtoupper', $missing))],
                 'issues'     => [],
                 'canConfirm' => false,
+                'sheetDefaults' => $sheetDefaults,
+                'defaultClientId' => $defaultClientId,
             ]);
         }
 
@@ -144,6 +156,8 @@ class ImportAssignmentsController extends Controller
             'canConfirm' => empty($issues),
             'cellErrors' => $cellErrors,
             'requiredMap'=> self::REQUIRED,
+            'defaultClientId' => $defaultClientId,
+            'sheetDefaults' =>$sheetDefaults
         ]);
     }
     
@@ -156,6 +170,36 @@ class ImportAssignmentsController extends Controller
                 ->route('imports.assignments.form')
                 ->withErrors(['file' => 'Nothing to import or the preview had issues.']);
         }
+
+        // pick a default client from the form (select)
+        $defaultClient = null;
+        if ($request->filled('client_id')) {
+            $defaultClient = \App\Models\Client::find($request->integer('client_id'));
+        }
+
+        // 1) read defaults from session (reliable), fallback to request hidden inputs
+        $sheetDefaults = session()->pull('import.assignments.defaults', []);
+        if (empty($sheetDefaults)) {
+            $sheetDefaults = [
+                'client_name'       => trim((string)$request->input('default_client_name', '')),
+                'sector'            => trim((string)$request->input('default_sector', '')),
+                'subscription_type' => trim((string)$request->input('default_subscription_type', '')),
+            ];
+        }
+
+        $bannerClient = null;
+        if ($sheetDefaults['client_name'] !== '') {
+            $bannerClient = \App\Models\Client::firstOrCreate(
+                ['name' => $sheetDefaults['client_name']],
+                [
+                    'sector'            => $sheetDefaults['sector'] ?: null,
+                    'subscription_type' => $this->mapSubscription($sheetDefaults['subscription_type']),
+                ]
+            );
+        }
+
+        // whichever exists: banner default beats form default (you can flip this if you prefer)
+        $globalDefaultClient = $bannerClient ?: $defaultClient;
 
         // ---- Precollect keys to prefetch/create base lookups ----
         $imeiSet       = collect($rows)->pluck('imei')->filter()->unique()->values();
@@ -203,12 +247,42 @@ class ImportAssignmentsController extends Controller
         $created = ['devices'=>0,'sims'=>0,'vehicles'=>0,'sensors'=>0,'assignments'=>0];
         $updated = ['devices'=>0,'sims'=>0,'vehicles'=>0,'sensors'=>0,'assignments'=>0];
 
-        DB::transaction(function () use ($rows, $deviceModels, $carriers, &$devices, &$vehicles, &$sensors, &$created, &$updated) {
+        DB::transaction(function () use ($rows, $deviceModels, $carriers, &$devices, &$vehicles, &$sensors, &$created, &$updated, $globalDefaultClient) {
+            $client = $globalDefaultClient;
 
             foreach ($rows as $row) {
+                // row-level override?
+                $nameFromRow = trim((string)($row['client_name'] ?? ''));
+                if ($nameFromRow !== '') {
+                    static $clientsCache; if ($clientsCache === null) $clientsCache = collect();
+                    $client = $clientsCache->get($nameFromRow);
+                    if (!$client) {
+                        $client = \App\Models\Client::firstOrCreate(
+                            ['name' => $nameFromRow],
+                            [
+                                'sector'            => $row['sector'] ?? null,
+                                'subscription_type' => $this->mapSubscription($row['subscription_type'] ?? null),
+                            ]
+                        );
+                        $clientsCache->put($nameFromRow, $client);
+                    } else {
+                        // Optionally hydrate missing meta (only if blank on record)
+                        $dirty = false;
+                        if (!$client->sector && !empty($row['sector'])) {
+                            $client->sector = $row['sector']; $dirty = true;
+                        }
+                        $sub = $this->mapSubscription($row['subscription_type'] ?? null);
+                        if (!$client->subscription_type && $sub) {
+                            $client->subscription_type = $sub; $dirty = true;
+                        }
+                        if ($dirty) $client->save();
+                    }
+                }
+
                 // ---------- DEVICE (required) ----------
                 $imei = (string) $row['imei'];
-                $modelName = $row['model'] ?? $row['device_type'] ?? 'UNKNOWN';
+                $modelName = $row['model'] ?? $row['device_type'] ?? $row['device_model'] ?? 'UNKNOWN';
+                $modelName = $modelName ? strtoupper(trim($modelName)) : 'UNKNOWN';
                 /** @var \App\Models\DeviceModel $deviceModel */
                 $deviceModel = $deviceModels->get($modelName);
                 if (!$deviceModel) {
@@ -280,6 +354,9 @@ class ImportAssignmentsController extends Controller
                 if (!empty($row['plate'])) {
                     $plate = trim((string)$row['plate']);
                     $vehicle = $vehicles->get($plate) ?? new Vehicle(['plate' => $plate]);
+
+                    // attach client if we have one
+                    if ($client) $vehicle->client_id = $client->id;
 
                     // Optional vehicle fields present in your schema
                     if (!empty($row['vehicle_status'])) {
@@ -360,6 +437,92 @@ class ImportAssignmentsController extends Controller
         return redirect()->route('imports.assignments.form')->with('status', $msg);
     }
 
+    /**
+     * Pick the longest non-empty text in a row.
+     * Good for merged header rows where the client name/sector appear once.
+     */
+    private function pickLongestTextInRow(array $row): ?string
+    {
+        $best = '';
+        foreach ($row as $cell) {
+            $t = trim((string)$cell);
+            if ($t !== '' && mb_strlen($t, 'UTF-8') > mb_strlen($best, 'UTF-8')) {
+                $best = $t;
+            }
+        }
+        return $best ?: null;
+    }
+
+    /** Map Arabic/English subscription text to our enum */
+    private function mapSubscription(?string $v): ?string
+    {
+        if ($v === null) return null;
+        $t = trim(mb_strtolower($v, 'UTF-8'));
+        if ($t === '') return null;
+
+        // Arabic
+        if (preg_match('/شهري/u', $t))  return 'monthly';
+        if (preg_match('/سنوي/u', $t))  return 'yearly';
+        if (preg_match('/إ?يجار/u', $t)) return 'lease';
+
+        // English
+        if (str_contains($t, 'monthly')) return 'monthly';
+        if (str_contains($t, 'yearly') || str_contains($t, 'annual')) return 'yearly';
+        if (str_contains($t, 'lease')) return 'lease';
+
+        return null;
+    }
+
+    /**
+     * Extract banner defaults (client name, sector, subscription type)
+     * from the first 2–3 rows of the first worksheet read by `Excel::toArray`.
+     */
+    private function extractBannerDefaultsFromArray(array $raw): array
+    {
+        $row1 = $raw[0] ?? [];  // first row in sheet (0-based)
+        $row2 = $raw[1] ?? [];  // second row
+        $row3 = $raw[2] ?? [];  // third row (sometimes labels end up here)
+
+        // 1) client + sector as "longest text" on rows 1 and 2
+        $client = $this->pickLongestTextInRow($row1);
+        $sector = $this->pickLongestTextInRow($row2);
+
+        // 2) subscription type — look for a label like "نوع الاشتراك / subscription type"
+        // and take the cell to the right; otherwise detect value directly.
+        $subscription = null;
+
+        $scanRows = [$row1, $row2, $row3];
+        foreach ($scanRows as $r) {
+            foreach ($r as $i => $cell) {
+                $t = trim((string)$cell);
+                if ($t === '') continue;
+
+                // label to the left?
+                if (preg_match('/نوع\s*الاشتراك|subscription\s*type/i', $t)) {
+                    $right = trim((string)($r[$i+1] ?? ''));
+                    if ($right !== '') {
+                        $subscription = $this->mapSubscription($right);
+                        if ($subscription) break 2;
+                    }
+                }
+
+                // the value itself?
+                $maybe = $this->mapSubscription($t);
+                if ($maybe) {
+                    $subscription = $maybe;
+                    break 2;
+                }
+            }
+        }
+
+        return [
+            'client_name'       => $client,
+            'sector'            => $sector,
+            'subscription_type' => $subscription,
+        ];
+    }
+
+
     /** Convert Arabic/English yes/no-ish to bool(0/1) */
     private function toBool($v): int
     {
@@ -370,12 +533,29 @@ class ImportAssignmentsController extends Controller
     /** Prefer an explicit carrier name from the row; fall back to 'UNKNOWN' */
     private function pickCarrierName(array $row): ?string
     {
-        foreach (['carrier','sim_carrier','carrier_name','نوع_الشريحة','نوع_الباقة'] as $k) {
-            if (!empty($row[$k])) return trim((string)$row[$k]);
+        // Prefer already-mapped canonical keys
+        foreach (['carrier','sim_carrier','carrier_name'] as $k) {
+            if (!empty($row[$k])) {
+                $v = trim((string)$row[$k]);
+                if ($v !== '') return $v;
+            }
         }
-        // Sometimes carrier is embedded in notes/columns — return null to avoid creating "UNKNOWN" unless a SIM exists
-        return null;
+
+        // Fall back to scanning raw headers (normalize to compare)
+        $needles = ['carrier','sim_carrier','carrier_name','نوع_الشريحة','نوع_الباقة'];
+        $needles = array_map(fn($n) => $this->normHeader($n), $needles);
+
+        foreach ($row as $key => $value) {
+            $nk = $this->normHeader((string)$key);
+            if (in_array($nk, $needles, true)) {
+                $v = trim((string)$value);
+                if ($v !== '') return $v;
+            }
+        }
+
+        return null; // let caller decide whether to use 'UNKNOWN'
     }
+
 
 
     /* ========================= Helpers ========================= */
@@ -408,29 +588,44 @@ class ImportAssignmentsController extends Controller
 
     private function translateHeader(string $column): ?string
     {
-        $c = trim(mb_strtolower($column, 'UTF-8'));
-        $c = preg_replace('/\s+/u', '_', $c);
+        $c = $this->normHeader($column);
 
         $map = [
-            'imei'           => ['imei','ايمي','رقم_imei'],
-            'sim_serial'     => ['sim_serial','رقم_الشريحة','icc','iccid'],
-            'msisdn'         => ['msisdn','رقم_الهاتف','جوال','هاتف'],
-            'plate'          => ['plate','لوحة','رقم_اللوحة'],
+            'imei'           => ['imei','ايمي','رقم imei'],
+            'sim_serial'     => ['sim_serial','رقم الشريحة','icc','iccid'],
+            'msisdn'         => ['msisdn','رقم الهاتف','جوال','هاتف'],
+            'plate'          => ['plate','لوحة','رقم اللوحة'],
             'sensor'         => ['sensor','حساس','الحساس'],
-            'model'          => ['model','موديل_الجهاز'],
-            'manufacturer'   => ['manufacturer','اسم_الشركة_المصنعة_للجهاز'],
-            'subscription'   => ['subscription_type','نوع_الاشتراك','نظام_البيع'],
+
+            // Device model / type
+            'model' => [
+                'model','device_model','device_type',
+                'موديل الجهاز','نوع الجهاز',   // spaced versions are fine
+                'موديل_الجهاز','نوع_الجهاز',   // just in case
+            ],
+
+            'carrier'        => [
+                'carrier','carrier_name','sim_carrier',
+                'نوع_الشريحة','نوع الشريحة',
+                'نوع_الباقة','نوع الباقة',
+                'شركة_الاتصالات','شركة الاتصالات'
+            ],
+
+            'manufacturer'   => ['manufacturer','اسم الشركة المصنعة للجهاز','اسم_الشركة_المصنعة_للجهاز'],
+            'subscription'   => ['subscription_type','نوع الاشتراك','نظام البيع','نوع_الاشتراك','نظام_البيع'],
             'note'           => ['note','notes','ملاحظات','ملاحظة'],
-            'installed_on'   => ['installed_on','تاريخ_التركيب','تاريخ_التثبيت'],
-            'removed_on'     => ['removed_on','تاريخ_الازالة','تاريخ_الإزالة'],
+            'installed_on'   => ['installed_on','تاريخ التركيب','تاريخ التثبيت','تاريخ_التركيب','تاريخ_التثبيت'],
+            'removed_on'     => ['removed_on','تاريخ الازالة','تاريخ الإزالة','تاريخ_الازالة','تاريخ_الإزالة'],
             'year'           => ['year','السنة'],
-            'serial'         => ['serial','رقم_الدرجة','رقم_الجهاز'],
+            'serial'         => ['serial','رقم الدرجة','رقم الجهاز','رقم_الدرجة','رقم_الجهاز'],
             'count'          => ['count','qty','العدد'],
         ];
 
         foreach ($map as $std => $aliases) {
             foreach ($aliases as $a) {
-                if ($c === $a) return $std;
+                if ($c === $this->normHeader($a)) {   // <-- normalize alias
+                    return $std;
+                }
             }
         }
         return null;
@@ -444,6 +639,34 @@ class ImportAssignmentsController extends Controller
         return true;
     }
 
+    // Put these private helpers in your controller
+
+    /** remove NBSP, tatweel, diacritics; collapse spaces; lower-case */
+    private function normHeader(string $s): string
+    {
+        // normalize common invisible chars
+        $s = str_replace(["\xC2\xA0", "\xE2\x80\x8B"], ' ', $s); // NBSP, ZWSP
+        $s = str_replace('ـ', '', $s);                            // tatweel
+        // unify whitespace -> single underscore
+        $s = preg_replace('/\s+/u', '_', trim($s));
+        // drop Arabic diacritics
+        $s = preg_replace('/[\x{064B}-\x{065F}\x{0670}]/u', '', $s);
+        return mb_strtolower($s, 'UTF-8');
+    }
+
+    /** upper-case A–Z/0–9, strip weird punctuation */
+    private function normModel(?string $v): ?string
+    {
+        if ($v === null) return null;
+        $v = trim($v);
+        // Some sheets have spaces or soft hyphens inside the code
+        $v = str_replace(["\xC2\xA0", "\xE2\x80\x8B", ' '], '', $v);
+        // Keep only letters/numbers, then upper-case
+        $v = preg_replace('/[^0-9a-z]+/i', '', $v);
+        return $v ? strtoupper($v) : null;
+    }
+
+
     private function coerceRow(array $row): array
     {
         // Always treat identifiers as strings to avoid scientific notation
@@ -451,6 +674,13 @@ class ImportAssignmentsController extends Controller
             if (array_key_exists($k, $row)) {
                 $row[$k] = isset($row[$k]) ? (string)$row[$k] : '';
             }
+        }
+
+        if (array_key_exists('model', $row)) {
+            $row['model'] = $this->normModel((string) $row['model']);
+        }
+        if (array_key_exists('device_type', $row)) {
+            $row['device_type'] = $this->normModel((string) $row['device_type']);
         }
 
         // Dates -> Y-m-d

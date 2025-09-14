@@ -13,6 +13,7 @@ use App\Http\Controllers\SensorController;
 use App\Http\Controllers\CarrierController;
 use App\Http\Controllers\ImportAssignmentsController;
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\ClientController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -117,6 +118,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
     Route::get('/attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
     Route::delete('/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
+
+    Route::get('/clients',                [ClientController::class, 'index'])->name('clients.index');
+    Route::get('/clients/{client}',       [ClientController::class, 'show'])->name('clients.show');
+    Route::get('/clients/{client}/export',[ClientController::class, 'export'])->name('clients.export'); // ?format=xlsx|csv
 });
 
 require __DIR__.'/auth.php';

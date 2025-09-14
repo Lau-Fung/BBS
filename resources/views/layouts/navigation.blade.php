@@ -33,12 +33,15 @@
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('carriers.*') ? 'active fw-bold' : '' }}" href="{{ route('carriers.index') }}">{{ __('messages.nav.carriers') }}</a>
                     </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active fw-bold' : '' }}"
-                            href="{{ route('admin.users.index') }}">
-                                {{ __('messages.nav.user_management') }}
-                            </a>
-                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active fw-bold' : '' }}"
+                        href="{{ route('admin.users.index') }}">
+                            {{ __('messages.nav.user_management') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('clients.*') ? 'active fw-bold' : '' }}" href="{{ route('clients.index') }}">{{ __('messages.clients.title') }}</a>
+                    </li>
                 </ul>
             @endrole
 

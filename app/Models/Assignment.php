@@ -38,6 +38,11 @@ class Assignment extends Model
         return $this->belongsTo(Sensor::class); 
     }
 
+    public function scopeActive($q) 
+    { 
+        return $q->where('is_active', true); 
+    }
+
     // Spatie Query Builder "scope filters"
     public function scopeExpiryFrom($q, $date) {
         $q->whereHas('sim', fn($s) => $s->whereDate('plan_expiry_at','>=',$date));

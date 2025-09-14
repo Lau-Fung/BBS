@@ -31,6 +31,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'records.create',
             'records.update',
             'records.delete',
+
+            'clients.view', 
+            'clients.export'
         ];
 
         foreach ($perms as $p) {
@@ -48,7 +51,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $manager->syncPermissions([
             'assignments.view','assignments.create','assignments.update',
-            'records.view','records.create','records.update',
+            'records.view','records.create','records.update','clients.view', 'clients.export'
         ]);
 
         $entry->syncPermissions([
