@@ -20,6 +20,13 @@ use Maatwebsite\Excel\Excel as ExcelWriter;
 
 class ImportAssignmentsController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('permission:assignments.view')->only(['form']);
+        $this->middleware('permission:assignments.create')->only(['preview','confirm']);
+        $this->middleware('permission:assignments.export')->only(['export']);
+    }
     // Which columns are required per row in the preview
     private const REQUIRED = [
         'imei'       => true,

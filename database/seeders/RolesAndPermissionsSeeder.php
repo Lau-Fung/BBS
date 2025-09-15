@@ -17,6 +17,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // ---- Permissions (add what your policies/controllers check) ----
         $perms = [
+            // Users
+            'users.view',          // list users
+            'users.manage',        // create/update/delete + assign roles
             // Assignments (used by AssignmentPolicy)
             'assignments.view',
             'assignments.create',
@@ -51,12 +54,12 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $manager->syncPermissions([
             'assignments.view','assignments.create','assignments.update',
-            'records.view','records.create','records.update','clients.view', 'clients.export'
+            'records.view','records.create','records.update','clients.view', 'clients.export', 'users.view'
         ]);
 
         $entry->syncPermissions([
             'assignments.view','assignments.create','assignments.update',
-            'records.view','records.create','records.update',
+            'records.view','records.create','records.update','users.view'
         ]);
 
         $viewer->syncPermissions(['assignments.view','records.view']);
