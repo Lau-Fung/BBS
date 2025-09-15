@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Response;
 use PragmaRX\Google2FAQRCode\Google2FA;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\AssignmentController;
@@ -15,30 +14,23 @@ use App\Http\Controllers\ImportAssignmentsController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ClientController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', fn () => view('welcome'));
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', fn () => view('dashboard'))
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::get('/locale/{locale}', function (string $locale) {
     abort_unless(in_array($locale, ['ar','en']), 404);
     session(['locale' => $locale]);
-    // Optional: if you use cache for config/trans, you don't need to clear here.
     return back();
 })->name('locale.switch');
 
 Route::get('/user/two-factor-qr-code', function () {
     $user = auth()->user();
-
-    if (! $user->two_factor_secret) {
-        abort(404);
-    }
+    if (! $user?->two_factor_secret) abort(404);
 
     $google2fa = app(Google2FA::class);
-
     $svg = $google2fa->getQRCodeInline(
         config('app.name'),
         $user->email,
@@ -48,15 +40,17 @@ Route::get('/user/two-factor-qr-code', function () {
     return response($svg, 200)->header('Content-Type', 'image/svg+xml');
 })->middleware(['auth'])->name('two-factor.qr-code');
 
+/* -------------------- AUTH’D AREA -------------------- */
 Route::middleware('auth')->group(function () {
+    // profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::view('/profile/security', 'profile.security')->name('profile.security');
 
-     // Minimal records routes for Milestone-1
+    // (optional) example “records” – keep if you use it
     Route::prefix('records')->name('records.')->group(function () {
-        Route::get('/', [RecordController::class, 'index'])->name('index');       // records.index
+        Route::get('/', [RecordController::class, 'index'])->name('index');
         Route::get('/create', [RecordController::class, 'create'])->name('create');
         Route::post('/', [RecordController::class, 'store'])->name('store');
         Route::get('/{record}/edit', [RecordController::class, 'edit'])->name('edit');
@@ -65,35 +59,33 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-Route::middleware(['auth','role:Admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->only(['index','create','store','edit','update','destroy']);
-    
-    // Domain records (role/permission-based)
-    // Route::prefix('records')->name('records.')->group(function () {
-    //     Route::get('/', [RecordController::class,'index'])
-    //         ->middleware('permission:records.view')->name('index');
+/* -------------------- ADMIN (permission-based) -------------------- */
+// User management – Admin only (via permission)
+Route::middleware(['auth','verified'])->prefix('admin')->name('admin.')->group(function () {
+    // list users (allow if you gave users.view to Manager, otherwise only Admin has it)
+    Route::get('/users', [\App\Http\Controllers\Admin\UserController::class,'index'])
+        ->middleware('permission:users.view')
+        ->name('users.index');
 
-    //     Route::get('/create', [RecordController::class,'create'])
-    //         ->middleware('permission:records.create')->name('create');
-
-    //     Route::post('/', [RecordController::class,'store'])
-    //         ->middleware('permission:records.create')->name('store');
-
-    //     Route::get('/{record}/edit', [RecordController::class,'edit'])
-    //         ->middleware('permission:records.update')->name('edit');
-
-    //     Route::put('/{record}', [RecordController::class,'update'])
-    //         ->middleware('permission:records.update')->name('update');
-
-    //     Route::delete('/{record}', [RecordController::class,'destroy'])
-    //         ->middleware('permission:records.delete')->name('destroy');
-    // });
+    // manage users (Admin only)
+    Route::get('/users/create', [\App\Http\Controllers\Admin\UserController::class,'create'])
+        ->middleware('permission:users.manage')->name('users.create');
+    Route::post('/users', [\App\Http\Controllers\Admin\UserController::class,'store'])
+        ->middleware('permission:users.manage')->name('users.store');
+    Route::get('/users/{user}/edit', [\App\Http\Controllers\Admin\UserController::class,'edit'])
+        ->middleware('permission:users.manage')->name('users.edit');
+    Route::put('/users/{user}', [\App\Http\Controllers\Admin\UserController::class,'update'])
+        ->middleware('permission:users.manage')->name('users.update');
+    Route::delete('/users/{user}', [\App\Http\Controllers\Admin\UserController::class,'destroy'])
+        ->middleware('permission:users.manage')->name('users.destroy');
 });
 
+/* -------------------- APP DOMAIN ROUTES -------------------- */
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Main resources (visible to Manager / Data Entry too)
     Route::resource('assignments', AssignmentController::class);
     Route::post('assignments/{assignment}/restore', [AssignmentController::class,'restore'])
-        ->name('assignments.restore'); // if you enable soft deletes
+        ->name('assignments.restore');
 
     Route::resource('vehicles', VehicleController::class);
     Route::post('vehicles/{vehicle}/restore', [VehicleController::class,'restore'])->name('vehicles.restore');
@@ -107,21 +99,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('sensors', SensorController::class);
     Route::post('sensors/{sensor}/restore', [SensorController::class,'restore'])->name('sensors.restore');
 
-    Route::resource('carriers', CarrierController::class);
-    Route::post('carriers/{carrier}/restore', [CarrierController::class,'restore'])->name('carriers.restore');
+    // Reference data (Carriers) — protect with dedicated permission
+    Route::resource('carriers', CarrierController::class)
+        ->middleware('permission:admin.reference.manage');
+    Route::post('carriers/{carrier}/restore', [CarrierController::class,'restore'])
+        ->middleware('permission:admin.reference.manage')
+        ->name('carriers.restore');
 
-    Route::get ('/imports/assignments',              [ImportAssignmentsController::class,'form'])->name('imports.assignments.form');
-    Route::post('/imports/assignments/preview',      [ImportAssignmentsController::class,'preview'])->name('imports.assignments.preview');
-    Route::post('/imports/assignments/confirm',      [ImportAssignmentsController::class,'confirm'])->name('imports.assignments.confirm');
-    Route::get('/exports/assignments',               [ImportAssignmentsController::class, 'export'])->name('exports.assignments');
+    // Import / Export (permission-based)
+    Route::get ('/imports/assignments',         [ImportAssignmentsController::class,'form'])
+        ->middleware('permission:assignments.view')
+        ->name('imports.assignments.form');
 
+    Route::post('/imports/assignments/preview', [ImportAssignmentsController::class,'preview'])
+        ->middleware('permission:assignments.create')
+        ->name('imports.assignments.preview');
+
+    Route::post('/imports/assignments/confirm', [ImportAssignmentsController::class,'confirm'])
+        ->middleware('permission:assignments.create')
+        ->name('imports.assignments.confirm');
+
+    Route::get('/exports/assignments',          [ImportAssignmentsController::class, 'export'])
+        ->middleware('permission:assignments.export')
+        ->name('exports.assignments');
+
+    // Attachments
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
     Route::get('/attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
     Route::delete('/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
 
-    Route::get('/clients',                [ClientController::class, 'index'])->name('clients.index');
-    Route::get('/clients/{client}',       [ClientController::class, 'show'])->name('clients.show');
-    Route::get('/clients/{client}/export',[ClientController::class, 'export'])->name('clients.export'); // ?format=xlsx|csv
+    // Clients
+    Route::get('/clients',                 [ClientController::class, 'index'])->name('clients.index');
+    Route::get('/clients/{client}',        [ClientController::class, 'show'])->name('clients.show');
+    Route::get('/clients/{client}/export', [ClientController::class, 'export'])->name('clients.export'); // ?format=xlsx|csv
 });
 
 require __DIR__.'/auth.php';
