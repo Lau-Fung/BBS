@@ -405,7 +405,7 @@ return [
         'total_rows'         => 'Total rows',
         'valid_rows'         => 'Valid rows',
         'invalid_rows'         => 'Invalid rows',
-        'issues detected'         => 'Issues detected',
+        'issues_detected'         => 'Issues detected',
         'row'         => 'Row',
         'error_required_already_exists'         => 'Error / Required / Already exists',
         'duplicate'         => 'Duplicate in this file',

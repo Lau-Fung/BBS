@@ -18,13 +18,13 @@
                 <form method="post" action="{{ route('imports.assignments.preview') }}" enctype="multipart/form-data" class="space-y-4">
                     @csrf
                     <div>
-                        <label class="block mb-2">{{ __('messages.assignments.default_client_optional') }}</label>
+                        {{-- <label class="block mb-2">{{ __('messages.assignments.default_client_optional') }}</label>
                         <select name="client_id" class="border rounded mb-4">
                             <option value="">{{ __('messages.assignments.none') }}</option>
                             @foreach($clients as $id => $name)
                                 <option value="{{ $id }}" @selected(old('client_id')==$id)>{{ $name }}</option>
                             @endforeach
-                        </select>
+                        </select> --}}
                         <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('messages.assignments.excel_file') }}</label>
                         <input type="file" name="file" accept=".xlsx,.xls,.csv" required class="block w-full border rounded p-2">
                         @error('file')

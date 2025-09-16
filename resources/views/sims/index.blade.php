@@ -97,7 +97,7 @@
 		<!-- Results Summary -->
 		<div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
 			<div class="text-sm text-gray-600 dark:text-gray-400">
-				{{ __('messages.sims.showing') }} {{ $sims->firstItem() ?? 0 }} to {{ $sims->lastItem() ?? 0 }} of {{ $sims->total() }} {{ __('messages.sims.title') }}
+				{{ __('messages.sims.filters_showing') }} {{ $sims->firstItem() ?? 0 }} to {{ $sims->lastItem() ?? 0 }} of {{ $sims->total() }} {{ __('messages.sims.title') }}
 			</div>
 		</div>
 

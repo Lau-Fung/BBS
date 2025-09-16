@@ -9,6 +9,15 @@
 		{{ __('messages.vehicles.details') }}
 	</h2>
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+		@php($clients = \App\Models\Client::orderBy('name')->get())
+		<div class="space-y-2">
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('messages.clients.title') }}</label>
+			<select class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" name="client_id" required>
+				@foreach($clients as $client)
+					<option value="{{ $client->id }}" @selected(old('client_id', $client->id ?? '')===$client->id)>{{ $client->name }}</option>
+				@endforeach
+			</select>
+		</div>
 		<div class="space-y-2">
 			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('messages.vehicles.plate') }}</label>
 			<input class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" name="plate" value="{{ old('plate', $vehicle->plate ?? '') }}" required>
