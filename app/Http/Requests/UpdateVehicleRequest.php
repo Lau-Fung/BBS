@@ -29,6 +29,7 @@ class UpdateVehicleRequest extends FormRequest
             'crm_no' => ['nullable','string','max:64'],
             'notes' => ['nullable','string','max:1000'],
             'supervisor_user_id' => ['nullable','exists:users,id'],
+            'client_id' => ['nullable','exists:clients,id'],
         ];
     }
 }

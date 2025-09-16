@@ -7,8 +7,9 @@ use App\Models\Assignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ClientDetailExport;
+use App\Exports\ClientAdvancedExport;
 use Maatwebsite\Excel\Excel as ExcelWriter;
+use App\Support\Layouts\AdvancedLayout;
 
 class ClientController extends Controller
 {
@@ -53,39 +54,25 @@ class ClientController extends Controller
     }
 
     // DETAIL PAGE
-    public function show(Client $client, Request $request)
+    public function show(Client $client)
     {
-        // show all active assignments for this client (you can add date filters if needed)
-        $rows = DB::table('assignments as a')
-            ->leftJoin('devices as d', 'd.id', '=', 'a.device_id')
-            ->leftJoin('device_models as dm', 'dm.id', '=', 'd.device_model_id')
-            ->leftJoin('sims as s', 's.id', '=', 'a.sim_id')
-            ->leftJoin('vehicles as v', 'v.id', '=', 'a.vehicle_id')
-            ->where('a.is_active', true)
-            ->where('v.client_id', $client->id)
-            ->orderBy('v.plate')
-            ->select([
-                'v.plate',
-                'dm.name as device_model',
-                'd.imei',
-                's.sim_serial',
-                's.msisdn',
-                'a.installed_on',
-                'a.install_note',
-            ])
+        $assignments = $client->assignments()
+            ->with(['device.model', 'sim', 'vehicle'])
+            ->where('is_active', true)
+            ->orderBy('id')
             ->get();
 
-        return view('clients.show', compact('client','rows'));
+        $headers = AdvancedLayout::headings();
+        $rows    = AdvancedLayout::map($assignments);
+
+        return view('clients.show', compact('client', 'headers', 'rows'));
     }
 
     // EXPORT (XLSX/CSV)
-    public function export(Client $client, Request $request)
+    public function export(\App\Models\Client $client)
     {
-        $format = strtolower($request->get('format', 'xlsx'));
-        $writer = $format === 'csv' ? ExcelWriter::CSV : ExcelWriter::XLSX;
-
-        $file = 'client_'.$client->id.'_'.str_slug($client->name).'_'.now()->format('Ymd_His').'.'.$format;
-
-        return Excel::download(new ClientDetailExport($client), $file, $writer);
+        $format = request('format', 'xlsx'); // 'xlsx' or 'csv'
+        return new ClientAdvancedExport($client, $format);
     }
+
 }

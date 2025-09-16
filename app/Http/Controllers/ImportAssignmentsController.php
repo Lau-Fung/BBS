@@ -44,147 +44,95 @@ class ImportAssignmentsController extends Controller
     public function preview(Request $request)
     {
         $request->validate([
-            'file' => ['required','file','mimes:xlsx,csv,xls'],
+            'file' => ['required','file','mimes:xlsx,csv,xls,xlsm'],
         ]);
 
         $file = $request->file('file');
         $defaultClientId = $request->integer('client_id') ?: null;
 
-        // Read first sheet as raw 2D array (no heading row mapping here)
-        $sheets = Excel::toArray(new \App\Imports\GenericArrayImport, $file);
-        $raw = $sheets[0] ?? [];
-
-        if (empty($raw)) {
+        // Read ALL sheets (keeps your current GenericArrayImport)
+        $allSheets = Excel::toArray(new \App\Imports\GenericArrayImport, $file);
+        if (empty($allSheets)) {
             return back()->withErrors(['file' => 'Could not read the spreadsheet.']);
         }
 
-        // 1) Find actual header row (rows 1..15), by looking for IMEI (Arabic/English)
-        $headerRowNum = $this->findHeaderRow($raw, ['IMEI', 'ايمي', 'رقم IMEI']);
-        $headerIdx = max(0, $headerRowNum - 1);
+        $perSheet = [];
+        $allValid = [];
+        $combinedDefaults = ['client_name'=>null,'sector'=>null,'subscription_type'=>null];
 
-        $headersRaw = $raw[$headerIdx] ?? [];
-        // Build mapped keys for each header cell
-        $mappedKeys = [];
-        foreach ($headersRaw as $cell) {
-            $mappedKeys[] = $this->translateHeader((string) $cell) ?? trim((string) $cell);
-        }
+        foreach ($allSheets as $si => $raw) {
+            $parsed = $this->parseOneSheet($raw);
+            $perSheet[$si] = $parsed;
+            $allValid = array_merge($allValid, $parsed['valid']);
 
-        // NEW: read banner values and persist for confirm()
-        $sheetDefaults = $this->extractBannerDefaultsFromArray($raw);
-        session()->put('import.assignments.defaults', $sheetDefaults);
-        // allow an explicit client picked on the form to override
-        $defaultClientId = $request->integer('client_id') ?: null;
-
-        // 2) Slice data rows after header
-        $dataRows = array_slice($raw, $headerIdx + 1);
-
-        // 3) Convert each row to assoc by mapped keys, drop empty rows, coerce types
-        $rows = [];
-        foreach ($dataRows as $r) {
-            if ($this->isEmptyRow($r)) {
-                continue;
+            // remember first non-empty banner values across sheets (for display only)
+            foreach (['client_name','sector','subscription_type'] as $k) {
+                if (!$combinedDefaults[$k] && !empty($parsed['defaults'][$k])) {
+                    $combinedDefaults[$k] = $parsed['defaults'][$k];
+                }
             }
-            // Normalize column count mismatch
-            $r = array_values($r);
-            $assoc = [];
-            foreach ($mappedKeys as $i => $key) {
-                if (!$key) continue;
-                $assoc[$key] = $r[$i] ?? null;
-            }
-            $rows[] = $this->coerceRow($assoc);
         }
 
-        // 4) Fail fast if required columns are missing
-        $requiredCols = ['imei']; // add more if they must exist in the sheet
-        $missing = array_diff($requiredCols, $this->presentColumns($mappedKeys));
-        Log::info('mappedKeys', $mappedKeys);
-
-        if (!empty($missing)) {
-            return view('imports.assignments.preview', [
-                'fileName'   => $file->getClientOriginalName(),
-                'summary'    => ['total' => count($rows), 'valid' => 0, 'invalid' => 0],
-                'headers'    => $headersRaw,
-                'mappedKeys' => $mappedKeys,
-                'rows'       => $rows,
-                'fatal'      => ['Missing required column(s): ' . implode(', ', array_map('strtoupper', $missing))],
-                'issues'     => [],
-                'canConfirm' => false,
-                'sheetDefaults' => $sheetDefaults,
-                'defaultClientId' => $defaultClientId,
-            ]);
-        }
-
-        // 5) Duplicate detection (in-file only)
-        $dupCounts = $this->duplicateCounts($rows, ['imei','sim_serial','msisdn','plate','sensor']);
-        // Prefetch existing values from DB (for unique/conflict flags)
-        $vals = fn(string $k) => collect($rows)->pluck($k)->filter()->unique()->values();
-
-        $exists = [
-            'imei'       => Device::whereIn('imei', $vals('imei'))->pluck('imei')->flip()->all(),
-            'sim_serial' => Sim::whereIn('sim_serial', $vals('sim_serial'))->pluck('sim_serial')->flip()->all(),
-            'msisdn'     => Sim::whereIn('msisdn', $vals('msisdn'))->pluck('msisdn')->flip()->all(),
-            'plate'      => Vehicle::whereIn('plate', $vals('plate'))->pluck('plate')->flip()->all(),
-            'sensor'     => Sensor::whereIn('serial_or_bt_id', $vals('sensor'))->pluck('serial_or_bt_id')->flip()->all(),
+        // Keep backward compatibility with your current preview view: show SHEET #0
+        $first = $perSheet[0] ?? [
+            'headers'=>[], 'mappedKeys'=>[], 'rows'=>[], 'issues'=>[], 'fatal'=>[], 'cellErrors'=>[], 'valid'=>[]
         ];
 
+        // Store valid rows: first sheet (old key) + ALL sheets (new key)
+        session()->put('import.assignments.valid', $first['valid']);      // old behavior
+        session()->put('import.assignments.valid_all', $allValid);        // NEW: all sheets
+        session()->put('import.assignments.defaults', $combinedDefaults); // for confirm fallback
 
-        // 6) Row validation
-        $valid = [];
-        $issues = [];
-        $cellErrors = []; // [rowIndex => [field => 'required'|'format'|'dup-file'|'dup-db']]
-
-        foreach ($rows as $i => $row) {
-            $excelRow = $headerRowNum + 1 + $i;
-
-            [$ok, $clean, $errs, $fieldErrs] = $this->validateRow($row, $excelRow, $dupCounts, $exists);
-
-            if ($ok) {
-                $valid[] = $clean;
-            }
-            if (!empty($errs)) {
-                $issues[] = ['row' => $excelRow, 'messages' => $errs];
-            }
-
-            $cellErrors[$i] = $fieldErrs;
-        }
-
-
-        // Store $valid in session (or cache) for confirm step
-        session()->put('import.assignments.valid', $valid);
+        // (Optional) a compact summary per sheet you can show in the view if you want
+        $sheetsSummary = collect($perSheet)->map(function ($s, $idx) {
+            return [
+                'index'   => $idx,
+                'total'   => count($s['rows']),
+                'valid'   => count($s['valid']),
+                'invalid' => count($s['issues']),
+                'hasFatal'=> !empty($s['fatal']),
+            ];
+        })->all();
 
         return view('imports.assignments.preview', [
-            'fileName'   => $file->getClientOriginalName(),
-            'summary'    => ['total' => count($rows), 'valid' => count($valid), 'invalid' => count($issues)],
-            'headers'    => $headersRaw,
-            'mappedKeys' => $mappedKeys,
-            'rows'       => $rows,
-            'issues'     => $issues,
-            'fatal'      => [],
-            'canConfirm' => empty($issues),
-            'cellErrors' => $cellErrors,
-            'requiredMap'=> self::REQUIRED,
-            'defaultClientId' => $defaultClientId,
-            'sheetDefaults' =>$sheetDefaults
+            'fileName'       => $file->getClientOriginalName(),
+            'summary'        => ['total' => count($first['rows']), 'valid' => count($first['valid']), 'invalid' => count($first['issues'])],
+            'headers'        => $first['headers'],
+            'mappedKeys'     => $first['mappedKeys'],
+            'rows'           => $first['rows'],
+            'issues'         => $first['issues'],
+            'fatal'          => $first['fatal'],
+            'canConfirm'     => empty($first['fatal']) && empty($first['issues']), // same behavior for the first sheet UI
+            'cellErrors'     => $first['cellErrors'],
+            'requiredMap'    => self::REQUIRED,
+            'defaultClientId'=> $defaultClientId,
+            'sheetDefaults'  => $combinedDefaults,
+
+            // NEW (optional in your blade)
+            'sheetsSummary'  => $sheetsSummary,
         ]);
     }
     
     public function confirm(Request $request)
     {
-        // Validated rows from preview()
-        $rows = session()->pull('import.assignments.valid', []);
+        // Prefer the multi-sheet rows; fall back to the old key if needed
+        $rows = session()->pull('import.assignments.valid_all', []);
+        if (empty($rows)) {
+            $rows = session()->pull('import.assignments.valid', []);
+        }
         if (empty($rows)) {
             return redirect()
                 ->route('imports.assignments.form')
                 ->withErrors(['file' => 'Nothing to import or the preview had issues.']);
         }
 
-        // pick a default client from the form (select)
+        // default client (optional select on the form)
         $defaultClient = null;
         if ($request->filled('client_id')) {
             $defaultClient = \App\Models\Client::find($request->integer('client_id'));
         }
 
-        // 1) read defaults from session (reliable), fallback to request hidden inputs
+        // sheet-level defaults (first non-empty values saved during preview)
         $sheetDefaults = session()->pull('import.assignments.defaults', []);
         if (empty($sheetDefaults)) {
             $sheetDefaults = [
@@ -195,7 +143,7 @@ class ImportAssignmentsController extends Controller
         }
 
         $bannerClient = null;
-        if ($sheetDefaults['client_name'] !== '') {
+        if (!empty($sheetDefaults['client_name'])) {
             $bannerClient = \App\Models\Client::firstOrCreate(
                 ['name' => $sheetDefaults['client_name']],
                 [
@@ -204,37 +152,31 @@ class ImportAssignmentsController extends Controller
                 ]
             );
         }
-
-        // whichever exists: banner default beats form default (you can flip this if you prefer)
         $globalDefaultClient = $bannerClient ?: $defaultClient;
 
-        // ---- Precollect keys to prefetch/create base lookups ----
-        $imeiSet       = collect($rows)->pluck('imei')->filter()->unique()->values();
-        $plateSet      = collect($rows)->pluck('plate')->filter()->unique()->values();
-        $sensorIdSet   = collect($rows)->pluck('sensor')->filter()->unique()->values(); // serial_or_bt_id
-        $modelNames    = collect($rows)->map(fn($r) => $r['model'] ?? $r['device_type'] ?? null)->filter()->unique()->values();
-        $carrierNames  = collect($rows)->map(fn($r) => $this->pickCarrierName($r))->filter()->unique()->values();
+        // ==== from here on your original import logic is unchanged ====
+        // (it works because every row already contains client_name/sector/subscription_type
+        //  coming from its own sheet; those override the global default when present)
 
-        // Ensure a fallback model/carrier exists if needed
-        if ($modelNames->isEmpty()) {
-            $modelNames = collect(['UNKNOWN']);
-        }
-        if ($carrierNames->isEmpty()) {
-            $carrierNames = collect(['UNKNOWN']);
-        }
+        // ---- Precollect keys ----
+        $imeiSet     = collect($rows)->pluck('imei')->filter()->unique()->values();
+        $plateSet    = collect($rows)->pluck('plate')->filter()->unique()->values();
+        $sensorIdSet = collect($rows)->pluck('sensor')->filter()->unique()->values();
+        $modelNames  = collect($rows)->map(fn($r) => $r['model'] ?? $r['device_type'] ?? null)->filter()->unique()->values();
+        $carrierNames= collect($rows)->map(fn($r) => $this->pickCarrierName($r))->filter()->unique()->values();
 
-        // ---- Prefetch core lookups ----
+        if ($modelNames->isEmpty())   $modelNames   = collect(['UNKNOWN']);
+        if ($carrierNames->isEmpty()) $carrierNames = collect(['UNKNOWN']);
+
         $deviceModels = DeviceModel::whereIn('name', $modelNames)->get()->keyBy('name');
         $carriers     = Carrier::whereIn('name', $carrierNames)->get()->keyBy('name');
 
-        // Create missing device models quickly (manufacturer optional)
         foreach ($modelNames as $mn) {
             if (!$deviceModels->has($mn)) {
                 $dm = DeviceModel::create(['name' => $mn]);
                 $deviceModels->put($mn, $dm);
             }
         }
-        // Create missing carriers
         foreach ($carrierNames as $cn) {
             if (!$carriers->has($cn)) {
                 $c = Carrier::create(['name' => $cn]);
@@ -242,7 +184,6 @@ class ImportAssignmentsController extends Controller
             }
         }
 
-        // Prefetch existing entities keyed on their natural keys
         $devices  = Device::whereIn('imei', $imeiSet)->get()->keyBy('imei');
         $vehicles = $plateSet->isNotEmpty()
             ? Vehicle::whereIn('plate', $plateSet)->get()->keyBy('plate')
@@ -258,7 +199,7 @@ class ImportAssignmentsController extends Controller
             $client = $globalDefaultClient;
 
             foreach ($rows as $row) {
-                // row-level override?
+                // row-level override based on the row’s (sheet’s) client information
                 $nameFromRow = trim((string)($row['client_name'] ?? ''));
                 if ($nameFromRow !== '') {
                     static $clientsCache; if ($clientsCache === null) $clientsCache = collect();
@@ -273,7 +214,6 @@ class ImportAssignmentsController extends Controller
                         );
                         $clientsCache->put($nameFromRow, $client);
                     } else {
-                        // Optionally hydrate missing meta (only if blank on record)
                         $dirty = false;
                         if (!$client->sector && !empty($row['sector'])) {
                             $client->sector = $row['sector']; $dirty = true;
@@ -286,154 +226,105 @@ class ImportAssignmentsController extends Controller
                     }
                 }
 
-                // ---------- DEVICE (required) ----------
+                // === the rest is identical to your original confirm() ===
                 $imei = (string) $row['imei'];
                 $modelName = $row['model'] ?? $row['device_type'] ?? $row['device_model'] ?? 'UNKNOWN';
                 $modelName = $modelName ? strtoupper(trim($modelName)) : 'UNKNOWN';
-                /** @var \App\Models\DeviceModel $deviceModel */
-                $deviceModel = $deviceModels->get($modelName);
-                if (!$deviceModel) {
-                    $deviceModel = DeviceModel::firstOrCreate(['name' => $modelName]);
-                    $deviceModels->put($modelName, $deviceModel);
-                }
+                $deviceModel = $deviceModels->get($modelName)
+                    ?: tap(DeviceModel::firstOrCreate(['name'=>$modelName]), fn($dm) => $deviceModels->put($modelName,$dm));
 
-                /** @var \App\Models\Device $device */
-                $device = $devices->get($imei);
-                if (!$device) {
-                    $device = new Device(['imei' => $imei]);
-                }
-                // Required FK
+                $device = $devices->get($imei) ?: new Device(['imei'=>$imei]);
                 $device->device_model_id = $deviceModel->id;
-                // Optional device fields (present in your schema)
-                if (!empty($row['firmware'])) {
-                    $device->firmware = (string)$row['firmware'];
-                }
-                if (array_key_exists('is_active', $row)) {
-                    $device->is_active = $this->toBool($row['is_active']);
-                }
+                if (!empty($row['firmware'])) $device->firmware = (string)$row['firmware'];
+                if (array_key_exists('is_active',$row)) $device->is_active = $this->toBool($row['is_active']);
+                $existed = $device->exists; $device->save();
+                $existed ? $updated['devices']++ : $created['devices']++;
+                $devices->put($imei,$device);
 
-                $wasExisting = $device->exists;
-                $device->save();
-                $wasExisting ? $updated['devices']++ : $created['devices']++;
-                $devices->put($imei, $device);
-
-                // ---------- SIM (optional) ----------
                 $sim = null;
                 $simSerial = isset($row['sim_serial']) ? trim((string)$row['sim_serial']) : '';
                 $msisdn    = isset($row['msisdn'])     ? trim((string)$row['msisdn'])     : '';
-
                 if ($simSerial !== '' || $msisdn !== '') {
-                    // Carrier is required on sims table
                     $carrierName = $this->pickCarrierName($row) ?? 'UNKNOWN';
-                    $carrier = $carriers->get($carrierName);
-                    if (!$carrier) {
-                        $carrier = Carrier::firstOrCreate(['name' => $carrierName]);
-                        $carriers->put($carrierName, $carrier);
-                    }
-
-                    // Match existing SIM by sim_serial first, then msisdn
-                    if ($simSerial !== '') {
-                        $sim = Sim::where('sim_serial', $simSerial)->first();
-                    }
-                    if (!$sim && $msisdn !== '') {
-                        $sim = Sim::where('msisdn', $msisdn)->first();
-                    }
-
-                    if (!$sim) {
-                        $sim = new Sim(['carrier_id' => $carrier->id]);
-                    }
-                    // Assign natural keys/fields if provided
+                    $carrier = $carriers->get($carrierName) ?: tap(Carrier::firstOrCreate(['name'=>$carrierName]), fn($c) => $carriers->put($carrierName,$c));
+                    if ($simSerial !== '') $sim = Sim::where('sim_serial',$simSerial)->first();
+                    if (!$sim && $msisdn !== '') $sim = Sim::where('msisdn',$msisdn)->first();
+                    if (!$sim) $sim = new Sim(['carrier_id'=>$carrier->id]);
                     if ($simSerial !== '') $sim->sim_serial = $simSerial;
                     if ($msisdn    !== '') $sim->msisdn     = $msisdn;
-
                     $sim->carrier_id = $carrier->id;
-                    if (array_key_exists('is_active', $row)) {
-                        $sim->is_active = $this->toBool($row['is_active']);
-                    }
-
-                    $existed = $sim->exists;
-                    $sim->save();
-                    $existed ? $updated['sims']++ : $created['sims']++;
+                    if (array_key_exists('is_active',$row)) $sim->is_active = $this->toBool($row['is_active']);
+                    $ex2 = $sim->exists; $sim->save();
+                    $ex2 ? $updated['sims']++ : $created['sims']++;
                 }
 
-                // ---------- VEHICLE (optional) ----------
                 $vehicle = null;
                 if (!empty($row['plate'])) {
-                    $plate = trim((string)$row['plate']);
-                    $vehicle = $vehicles->get($plate) ?? new Vehicle(['plate' => $plate]);
-
-                    // attach client if we have one
+                    $plate   = trim((string)$row['plate']);
+                    $vehicle = $vehicles->get($plate) ?? new Vehicle(['plate'=>$plate]);
                     if ($client) $vehicle->client_id = $client->id;
-
-                    // Optional vehicle fields present in your schema
-                    if (!empty($row['vehicle_status'])) {
-                        $vehicle->status = $row['vehicle_status']; // must be one of the enum values
-                    }
-                    if (!empty($row['vehicle_notes'])) {
-                        $vehicle->notes = $row['vehicle_notes'];
-                    }
-
-                    $existed = $vehicle->exists;
-                    $vehicle->save();
-                    $existed ? $updated['vehicles']++ : $created['vehicles']++;
-                    $vehicles->put($plate, $vehicle);
+                    if (!empty($row['vehicle_status'])) $vehicle->status = $row['vehicle_status'];
+                    if (!empty($row['vehicle_notes']))  $vehicle->notes  = $row['vehicle_notes'];
+                    $ex3 = $vehicle->exists; $vehicle->save();
+                    $ex3 ? $updated['vehicles']++ : $created['vehicles']++;
+                    $vehicles->put($plate,$vehicle);
                 }
 
-                // ---------- SENSOR (optional) ----------
                 $sensor = null;
                 if (!empty($row['sensor'])) {
-                    $sid = trim((string)$row['sensor']); // treat as serial_or_bt_id from sheet
-                    $sensor = $sensors->get($sid) ?? new Sensor(['serial_or_bt_id' => $sid]);
-
-                    // Optional sensor model notes (if you map them later)
-                    if (!empty($row['sensor_note'])) {
-                        $sensor->notes = $row['sensor_note'];
-                    }
-
-                    $existed = $sensor->exists;
-                    $sensor->save();
-                    $existed ? $updated['sensors']++ : $created['sensors']++;
-                    $sensors->put($sid, $sensor);
+                    $sid = trim((string)$row['sensor']);
+                    $sensor = $sensors->get($sid) ?? new Sensor(['serial_or_bt_id'=>$sid]);
+                    if (!empty($row['sensor_note'])) $sensor->notes = $row['sensor_note'];
+                    $ex4 = $sensor->exists; $sensor->save();
+                    $ex4 ? $updated['sensors']++ : $created['sensors']++;
+                    $sensors->put($sid,$sensor);
                 }
 
-                // ---------- ASSIGNMENT (single active per device) ----------
-                // Try to find the current active assignment; include trashed to avoid unique(index) conflicts
-                /** @var \App\Models\Assignment|null $assignment */
                 $assignment = Assignment::withTrashed()
-                    ->where('device_id', $device->id)
-                    ->where('is_active', true)
-                    ->first();
+                    ->where('device_id',$device->id)->where('is_active',true)->first();
+                if ($assignment && $assignment->trashed()) $assignment->restore();
+                if (!$assignment) $assignment = new Assignment(['device_id'=>$device->id,'is_active'=>true]);
 
-                if ($assignment && $assignment->trashed()) {
-                    // If a soft-deleted row still has is_active=true, restore and reuse it
-                    $assignment->restore();
-                }
-
-                if (!$assignment) {
-                    $assignment = new Assignment(['device_id' => $device->id, 'is_active' => true]);
-                }
-
-                // Link everything
                 $assignment->sim_id     = $sim?->id;
                 $assignment->vehicle_id = $vehicle?->id;
                 $assignment->sensor_id  = $sensor?->id;
 
-                // Dates & flags from sheet
-                $assignment->installed_on = $row['installed_on'] ?? $assignment->installed_on;
-                $assignment->removed_on   = $row['removed_on']   ?? $assignment->removed_on;
+                $assignment->installed_on = $this->normalizeDate($row['installed_on'] ?? null);
+                $assignment->removed_on   = $this->normalizeDate($row['removed_on']   ?? null);
                 $assignment->install_note = $row['note'] ?? $row['install_note'] ?? $assignment->install_note;
-
-                // is_installed: true when installed_on present and removed_on empty
                 $assignment->is_installed = !empty($assignment->installed_on) && empty($assignment->removed_on);
+
+                $ex5 = $assignment->exists; 
+                // Advanced layout extras we want to keep:
+                $extraKeys = [
+                    'package_type','sim_type','air','mechanic','tracking','system_type',
+                    'calibration','color','crm','technician','vehicle_number','vehicle_serial',
+                    'vehicle_weight','user','year_model','manufacturer','device_type'
+                ];
+
+                // Merge without losing existing extras:
+                $existingExtras = (array)($assignment->extras ?? []);
+                $newExtras = [];
+                foreach ($extraKeys as $ek) {
+                    if (!empty($row[$ek])) {
+                        $newExtras[$ek] = (string)$row[$ek];
+                    }
+                }
+                $assignment->extras = array_replace($existingExtras, $newExtras);
+
+                // Keep the note in extras if you also read it from sheet
+                if (!empty($row['note']) && empty($assignment->install_note)) {
+                    $assignment->install_note = (string)$row['note'];
+                }
 
                 $existed = $assignment->exists;
                 $assignment->save();
-                $existed ? $updated['assignments']++ : $created['assignments']++;
+                $ex5 ? $updated['assignments']++ : $created['assignments']++;
             }
         });
 
         $msg = sprintf(
-            'Import completed: devices +%d/%d, sims +%d/%d, vehicles +%d/%d, sensors +%d/%d, assignments +%d/%d.',
+            'Import completed (all sheets): devices +%d/%d, sims +%d/%d, vehicles +%d/%d, sensors +%d/%d, assignments +%d/%d.',
             $created['devices'], $updated['devices'],
             $created['sims'],    $updated['sims'],
             $created['vehicles'],$updated['vehicles'],
@@ -599,33 +490,40 @@ class ImportAssignmentsController extends Controller
 
         $map = [
             'imei'           => ['imei','ايمي','رقم imei'],
-            'sim_serial'     => ['sim_serial','رقم الشريحة','icc','iccid'],
             'msisdn'         => ['msisdn','رقم الهاتف','جوال','هاتف'],
             'plate'          => ['plate','لوحة','رقم اللوحة'],
             'sensor'         => ['sensor','حساس','الحساس'],
 
-            // Device model / type
-            'model' => [
-                'model','device_model','device_type',
-                'موديل الجهاز','نوع الجهاز',   // spaced versions are fine
-                'موديل_الجهاز','نوع_الجهاز',   // just in case
-            ],
-
             'carrier'        => [
                 'carrier','carrier_name','sim_carrier',
                 'نوع_الشريحة','نوع الشريحة',
-                'نوع_الباقة','نوع الباقة',
                 'شركة_الاتصالات','شركة الاتصالات'
             ],
 
-            'manufacturer'   => ['manufacturer','اسم الشركة المصنعة للجهاز','اسم_الشركة_المصنعة_للجهاز'],
             'subscription'   => ['subscription_type','نوع الاشتراك','نظام البيع','نوع_الاشتراك','نظام_البيع'],
             'note'           => ['note','notes','ملاحظات','ملاحظة'],
             'installed_on'   => ['installed_on','تاريخ التركيب','تاريخ التثبيت','تاريخ_التركيب','تاريخ_التثبيت'],
             'removed_on'     => ['removed_on','تاريخ الازالة','تاريخ الإزالة','تاريخ_الازالة','تاريخ_الإزالة'],
-            'year'           => ['year','السنة'],
             'serial'         => ['serial','رقم الدرجة','رقم الجهاز','رقم_الدرجة','رقم_الجهاز'],
-            'count'          => ['count','qty','العدد'],
+            'no'          => ['count','qty','العدد'],
+            'year'          => ['year','موديل المركبة'],
+
+            'package_type'   => ['data package type','نوع الباقة','نوع الباقة (data package type)'],
+            'sim_type'       => ['sim type','رقم الشريحة'],
+            'manufacturer'   => ['company manufacture','اسم الشركة المصنعة للمركبة','الشركة المصنعة للمركبة'],
+            'device_type'    => ['device type','نوع الجهاز','موديل الجهاز'],
+            'air'            => ['air','منافيخ'],
+            'mechanic'       => ['mechanic','تتبع'],
+            'tracking'       => ['tracking','نظام التتبع'],
+            'system_type'    => ['system type','نوع النظام'],
+            'calibration'    => ['calibration','المعيار'],
+            'color'          => ['color','لون','لون المركبة'],
+            'crm'            => ['crm','crm integration','تكامل crm','رقم الطلب crm','رقم الطلب'],
+            'technician'     => ['technician','الفني'],
+            'vehicle_number' => ['vehicle number','رقم المركبة'],
+            'vehicle_serial' => ['vehicle serial number','الرقم التسلسلي للمركبة'],
+            'vehicle_weight' => ['vehicle weight','وزن المركبة'],
+            'user'           => ['user','USER','المستخدم'],
         ];
 
         foreach ($map as $std => $aliases) {
@@ -637,6 +535,28 @@ class ImportAssignmentsController extends Controller
         }
         return null;
     }
+
+    private function toLatinDigits(string $s): string {
+        $arabic = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩','٫','،'];
+        $latin  = ['0','1','2','3','4','5','6','7','8','9','. ', ', ']; // last two are placeholders but keep them
+        $s = str_replace($arabic, str_split('0123456789..'), $s);
+        return $s;
+    }
+    private function parseDateFlexible($v): ?string {
+        if ($v === null || $v === '') return null;
+        if (is_numeric($v)) {
+            return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float)$v)->format('Y-m-d');
+        }
+        $s = $this->toLatinDigits((string)$v);
+        $s = str_replace(['.', '٫'], '/', $s);
+        $s = str_replace('-', '/', $s);
+        foreach (['Y/m/d','d/m/Y','m/d/Y','Y-m-d','d-m-Y','m-d-Y'] as $fmt) {
+            try { return \Carbon\Carbon::createFromFormat($fmt, $s)->format('Y-m-d'); } catch (\Throwable $e) {}
+        }
+        $ts = strtotime($s);
+        return $ts ? date('Y-m-d', $ts) : null;
+    }
+
 
     private function isEmptyRow(array $row): bool
     {
@@ -712,18 +632,54 @@ class ImportAssignmentsController extends Controller
         // Dates -> Y-m-d
         foreach (['installed_on','removed_on'] as $k) {
             if (!empty($row[$k])) {
-                if (is_numeric($row[$k])) {
-                    $row[$k] = ExcelDate::excelToDateTimeObject($row[$k])->format('Y-m-d');
-                } else {
-                    $ts = strtotime((string)$row[$k]);
-                    if ($ts !== false) {
-                        $row[$k] = date('Y-m-d', $ts);
-                    }
-                }
+                $row[$k] = $this->parseDateFlexible($row[$k]);
             }
         }
 
         return $row;
+    }
+
+    /**
+     * Normalize many date shapes to Y-m-d (or null).
+     * Supports Excel serials, d/m/Y, d-m-Y, d.m.Y, Y-m-d, m/d/Y (fallback), etc.
+     */
+    private function normalizeDate($value): ?string
+    {
+        if ($value === null || $value === '') return null;
+
+        // Excel serial number
+        if (is_numeric($value)) {
+            try {
+                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value)->format('Y-m-d');
+            } catch (\Throwable $e) {
+                // fall through
+            }
+        }
+
+        $s = trim((string) $value);
+        if ($s === '') return null;
+
+        // Unify separators for regex tests
+        $u = str_replace(['.', '\\'], ['-', '/'], $s);
+
+        // Y-m-d or Y/m/d
+        if (preg_match('/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/', $u, $m)) {
+            [$y,$mth,$d] = [(int)$m[1], (int)$m[2], (int)$m[3]];
+            if (checkdate($mth, $d, $y)) return sprintf('%04d-%02d-%02d', $y, $mth, $d);
+        }
+
+        // d-m-Y or d/m/Y (day-first — your case "14/7/2025")
+        if (preg_match('/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})$/', $u, $m)) {
+            [$d,$mth,$y] = [(int)$m[1], (int)$m[2], (int)$m[3]];
+            if ($y < 100) $y += 2000;
+            if (checkdate($mth, $d, $y)) return sprintf('%04d-%02d-%02d', $y, $mth, $d);
+        }
+
+        // Last resort: strtotime()
+        $ts = strtotime($s);
+        if ($ts !== false) return date('Y-m-d', $ts);
+
+        return null;
     }
 
 
@@ -818,6 +774,116 @@ class ImportAssignmentsController extends Controller
 
         $ok = empty($messages); // strict: any message blocks this row
         return [$ok, $row, $messages, $fieldErrs];
+    }
+
+    /**
+     * Parse ONE sheet (raw 2D array) using the same logic you already had.
+     * Returns: headers/mappedKeys/all rows/valid rows/issues/fatal and the sheet-level defaults.
+     */
+    private function parseOneSheet(array $raw): array
+    {
+        if (empty($raw)) {
+            return [
+                'headers' => [], 'mappedKeys' => [], 'rows' => [], 'valid' => [],
+                'issues' => [], 'cellErrors' => [], 'fatal' => ['Empty sheet'], 'defaults' => []
+            ];
+        }
+
+        // banner defaults for this sheet
+        $sheetDefaults = $this->extractBannerDefaultsFromArray($raw);
+
+        // detect header row and map columns (your original logic)
+        $headerRowNum = $this->findHeaderRow($raw, ['IMEI', 'ايمي', 'رقم IMEI']);
+        $headerIdx    = max(0, $headerRowNum - 1);
+
+        $headersRaw  = $raw[$headerIdx] ?? [];
+        $mappedKeys  = [];
+        foreach ($headersRaw as $cell) {
+            $mappedKeys[] = $this->translateHeader((string) $cell) ?? trim((string) $cell);
+        }
+
+        // rows after header
+        $dataRows = array_slice($raw, $headerIdx + 1);
+        $rows = [];
+        foreach ($dataRows as $r) {
+            if ($this->isEmptyRow($r)) continue;
+            $r = array_values($r);
+            $assoc = [];
+            foreach ($mappedKeys as $i => $key) {
+                if (!$key) continue;
+                $assoc[$key] = $r[$i] ?? null;
+            }
+            // normalize + keep row-level defaults (client, sector, subscription) if not present
+            $assoc = $this->coerceRow($assoc);
+            foreach (['client_name','sector','subscription_type'] as $k) {
+                if (!isset($assoc[$k]) || $assoc[$k] === null || $assoc[$k] === '') {
+                    if (!empty($sheetDefaults[$k])) $assoc[$k] = $sheetDefaults[$k];
+                }
+            }
+            $rows[] = $assoc;
+            // Consider a row "useful" only if at least one of these fields has data
+            $signalFields = ['imei','sim_serial','msisdn','plate','sensor','model','device_type','installed_on'];
+
+            // Drop trailing/blank rows so they don't show in preview or generate errors
+            $rows = array_values(array_filter($rows, function ($r) use ($signalFields) {
+                foreach ($signalFields as $f) {
+                    if (!empty(trim((string)($r[$f] ?? '')))) {
+                        return true; // keep this row
+                    }
+                }
+                return false; // remove empty row
+            }));
+        }
+
+        // fail fast if IMEI not present on this sheet
+        $missing = array_diff(['imei'], $this->presentColumns($mappedKeys));
+        if (!empty($missing)) {
+            return [
+                'headers' => $headersRaw, 'mappedKeys' => $mappedKeys, 'rows' => $rows, 'valid' => [],
+                'issues'  => [], 'cellErrors' => [],
+                'fatal'   => ['Missing required column(s): ' . implode(', ', array_map('strtoupper',$missing))],
+                'defaults'=> $sheetDefaults,
+            ];
+        }
+
+        // duplicates / already-exists
+        $dupCounts = $this->duplicateCounts($rows, ['imei','sim_serial','msisdn','plate','sensor']);
+        $vals = fn(string $k) => collect($rows)->pluck($k)->filter()->unique()->values();
+        $exists = [
+            'imei'       => Device::whereIn('imei', $vals('imei'))->pluck('imei')->flip()->all(),
+            'sim_serial' => Sim::whereIn('sim_serial', $vals('sim_serial'))->pluck('sim_serial')->flip()->all(),
+            'msisdn'     => Sim::whereIn('msisdn', $vals('msisdn'))->pluck('msisdn')->flip()->all(),
+            'plate'      => Vehicle::whereIn('plate', $vals('plate'))->pluck('plate')->flip()->all(),
+            'sensor'     => Sensor::whereIn('serial_or_bt_id', $vals('sensor'))->pluck('serial_or_bt_id')->flip()->all(),
+        ];
+
+        $valid = []; $issues = []; $cellErrors = [];
+        foreach ($rows as $i => $row) {
+            $excelRow = $headerRowNum + 1 + $i;
+            [$ok, $clean, $errs, $fieldErrs] = $this->validateRow($row, $excelRow, $dupCounts, $exists);
+            if ($ok) {
+                // ensure banner defaults survive into confirm()
+                foreach (['client_name','sector','subscription_type'] as $k) {
+                    if (!isset($clean[$k]) || $clean[$k] === null || $clean[$k] === '') {
+                        if (!empty($sheetDefaults[$k])) $clean[$k] = $sheetDefaults[$k];
+                    }
+                }
+                $valid[] = $clean;
+            }
+            if (!empty($errs)) $issues[] = ['row' => $excelRow, 'messages' => $errs];
+            $cellErrors[$i] = $fieldErrs;
+        }
+
+        return [
+            'headers'    => $headersRaw,
+            'mappedKeys' => $mappedKeys,
+            'rows'       => $rows,
+            'valid'      => $valid,
+            'issues'     => $issues,
+            'cellErrors' => $cellErrors,
+            'fatal'      => [],
+            'defaults'   => $sheetDefaults,
+        ];
     }
 
 

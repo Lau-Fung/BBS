@@ -404,7 +404,7 @@ return [
         'total_rows'         => 'إجمالي الصفوف',
         'valid_rows'         => 'الصفوف الصالحة',
         'invalid_rows'         => 'صفوف غير صالحة',
-        'issues detected'         => 'تم اكتشاف المشاكل',
+        'issues_detected'         => 'تم اكتشاف المشاكل',
         'row'         => 'صف',
         'error_required_already_exists'         => 'خطأ / مطلوب / موجود بالفعل',
         'duplicate'         => 'مكرر في هذا الملف',

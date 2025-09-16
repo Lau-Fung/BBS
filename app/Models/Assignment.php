@@ -20,6 +20,7 @@ class Assignment extends Model
         'is_active'    => 'boolean',
         'installed_on' => 'date',
         'removed_on'   => 'date',
+        'extras'   => 'array',
     ];
 
     public function device() { 
