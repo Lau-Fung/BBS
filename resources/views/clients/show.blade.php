@@ -30,8 +30,8 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <div>Sector: <strong>{{ $client->sector }}</strong></div>
-                        <div>Subscription: <strong>{{ $client->subscription_type ?? 'yearly' }}</strong></div>
+                        <div>{{ __('messages.clients.sector') }}: <strong>{{ $client->sector }}</strong></div>
+                        <div>{{ __('messages.clients.subscription') }}: <strong>{{ $client->subscription_type ?? 'yearly' }}</strong></div>
                     </div>
                     <div class="flex flex-row gap-3 justify-center items-center">
                         <a href="{{ route('clients.export', [$client, 'format'=>'xlsx', 'template'=>'advanced']) }}" 

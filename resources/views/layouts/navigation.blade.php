@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-4">
     <div class="container-fluid">
         {{-- Brand / Dashboard --}}
-        <a class="navbar-brand" href="{{ route('dashboard') }}">
+        <a class="navbar-brand" href="{{ route('dashboard.index') }}">
             <x-application-logo class="block h-9" />
         </a>
 
@@ -16,6 +16,12 @@
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     {{-- Core modules (visible to authenticated users) --}}
                     <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dashboard.*') ? 'active fw-bold' : '' }}"
+                           href="{{ route('dashboard.index') }}">
+                            {{ __('messages.nav.dashboard') }}
+                        </a>
+                    </li>
+                    {{-- <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('assignments.*') ? 'active fw-bold' : '' }}"
                            href="{{ route('assignments.index') }}">
                             {{ __('messages.nav.assignments') }}
@@ -44,17 +50,17 @@
                            href="{{ route('sensors.index') }}">
                             {{ __('messages.nav.sensors') }}
                         </a>
-                    </li>
+                    </li> --}}
 
                     {{-- Reference data (Carriers) – permission-gated --}}
-                    @can('admin.reference.manage')
+                    {{-- @can('admin.reference.manage')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('carriers.*') ? 'active fw-bold' : '' }}"
                                href="{{ route('carriers.index') }}">
                                 {{ __('messages.nav.carriers') }}
                             </a>
                         </li>
-                    @endcan
+                    @endcan --}}
 
                     {{-- User management – Admin only (or anyone with users.view) --}}
                     @can('users.view')

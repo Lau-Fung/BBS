@@ -23,6 +23,7 @@ return [
         'login'           => 'Log In',
         'language_ar'     => 'العربية',
         'language_en'     => 'EN',
+        'dashboard'     => 'Dashboard',
     ],
 
     'common' => [

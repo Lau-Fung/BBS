@@ -22,6 +22,7 @@ return [
         'login'           => 'تسجيل الدخول',
         'language_ar'     => 'العربية',
         'language_en'     => 'EN',
+        'dashboard'     => 'لوحة القيادة',
     ],
 
     'common' => [
