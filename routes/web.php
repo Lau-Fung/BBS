@@ -18,7 +18,7 @@ Route::get('/', fn () => view('welcome'));
 
 Route::get('/dashboard', fn () => view('dashboard'))
     ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+    ->name('dashboard.index');
 
 Route::get('/locale/{locale}', function (string $locale) {
     abort_unless(in_array($locale, ['ar','en']), 404);

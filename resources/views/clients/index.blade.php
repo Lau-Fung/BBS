@@ -10,6 +10,50 @@
             <button class="px-3 py-2 rounded bg-gray-700">{{ __('messages.clients.filter') }}</button>
         </form>
 
+        <div class="flex flex-row gap-3 justify-center items-center">
+            <a href="{{ route('imports.assignments.form') }}" 
+            class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                </svg>
+                {{ __('messages.assignments.import_from_excel') }}
+            </a>
+
+            <a href="{{ route('assignments.index') }}" 
+            class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                {{ __('messages.nav.assignments') }}
+            </a>
+            
+            <a href="{{ route('vehicles.index') }}" 
+            class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                {{ __('messages.nav.vehicles') }}
+            </a>
+
+            <a href="{{ route('devices.index') }}" 
+            class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                {{ __('messages.nav.devices') }}
+            </a>
+
+            <a href="{{ route('sims.index') }}" 
+            class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                {{ __('messages.nav.sims') }}
+            </a>
+
+            <a href="{{ route('sensors.index') }}" 
+            class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                {{ __('messages.nav.sensors') }}
+            </a>
+            
+            @can('admin.reference.manage')
+                <a href="{{ route('carriers.index') }}" 
+                class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                    {{ __('messages.nav.carriers') }}
+                </a>
+            @endcan
+
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             @forelse($clients as $c)
                 <div class="rounded border bg-white p-4 shadow-sm">
