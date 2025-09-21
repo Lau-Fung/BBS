@@ -429,6 +429,7 @@ return [
         'subscription' => 'Subscription',
         'export_xlsx'          => 'Export XLSX',
         'export_csv'          => 'Export CSV',
+        'export_pdf'          => 'Export PDF',
     ],
 
     'records' => 'Records',

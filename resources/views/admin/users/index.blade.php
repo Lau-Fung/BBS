@@ -40,23 +40,23 @@
                                     <td class="p-2">{{ $u->email }}</td>
                                     <td class="p-2">{{ $u->getRoleNames()->implode(', ') }}</td>
                                     <td class="p-2 text-right">
+                                        @if(auth()->id() !== $u->id)
+                                            <form method="POST"
+                                                action="{{ route('admin.users.destroy', $u) }}"
+                                                class="d-inline"
+                                                onsubmit="return confirm('Delete this user? This can be undone only if soft deletes are enabled.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        @endif
                                         <a href="{{ route('admin.users.edit',$u) }}"
                                         class="inline-flex items-center px-3 py-1.5 bg-white dark:bg-gray-700
                                                 border border-gray-300 dark:border-gray-600 rounded-md text-xs">
                                             {{ __('messages.common.edit') }}
                                         </a>
-                                        @if(auth()->id() !== $u->id)
-                                        <form method="POST"
-                                            action="{{ route('admin.users.destroy', $u) }}"
-                                            class="d-inline"
-                                            onsubmit="return confirm('Delete this user? This can be undone only if soft deletes are enabled.');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                Delete
-                                            </button>
-                                        </form>
-                                    @endif
                                     </td>
                                 </tr>
                             @endforeach
