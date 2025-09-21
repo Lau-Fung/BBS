@@ -132,6 +132,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/clients',                 [ClientController::class, 'index'])->name('clients.index');
     Route::get('/clients/{client}',        [ClientController::class, 'show'])->name('clients.show');
     Route::get('/clients/{client}/export', [ClientController::class, 'export'])->name('clients.export'); // ?format=xlsx|csv
+    Route::get('/clients/export/xlsx', [ClientController::class,'exportXlsx'])->name('clients.export.xlsx');
+    Route::get('/clients/export/pdf',  [ClientController::class,'exportPdf'])->name('clients.export.pdf');
 });
 
 require __DIR__.'/auth.php';
