@@ -8,22 +8,69 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ClientAdvancedExport;
+use App\Exports\ArrayExport;
 use Maatwebsite\Excel\Excel as ExcelWriter;
 use App\Support\Layouts\AdvancedLayout;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ClientController extends Controller
 {
+
     public function index(Request $request)
+    {
+        [$clients, $q] = $this->buildSummary($request);
+
+        return view('clients.index', compact('clients','q'));
+    }
+
+    /** ---------- Exports ---------- */
+
+    public function exportXlsx(Request $request)
+    {
+        [$clients, $q] = $this->buildSummary($request);
+
+        // Flatten rows for Excel
+        $rows = $clients->map(function ($c) {
+            $models = collect($c->models)->map(fn($m) => "{$m['model']}: {$m['count']}")->implode(', ');
+            return [
+                'Company'         => $c->name,
+                'Sector'          => $c->sector,
+                'Vehicles'        => $c->vehicles_count,
+                'Devices (active)' => $c->total_devices,
+                'Devices by model' => $models,
+            ];
+        })->toArray();
+
+        return Excel::download(new ArrayExport(
+            ['Company','Sector','Vehicles','Devices (active)','Devices by model'],
+            $rows
+        ), 'clients-summary.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        [$clients, $q] = $this->buildSummary($request);
+
+        $pdf = Pdf::loadView('clients.summary-pdf', [
+            'clients' => $clients,
+            'q'       => $q,
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('clients-summary.pdf');
+    }
+
+    /** ---------- Shared summary builder ---------- */
+    private function buildSummary(Request $request): array
     {
         $q = trim((string) $request->get('q', ''));
 
         $clients = Client::query()
-            ->when($q !== '', fn($qq) => $qq->where('name', 'like', "%{$q}%"))
+            ->when($q !== '', fn ($qq) => $qq->where('name', 'like', "%{$q}%"))
             ->withCount('vehicles')
             ->orderBy('name')
             ->get();
 
-        // precompute per-client totals (#active assignments = devices installed)
+        // active devices per client (active assignments)
         $totals = Assignment::query()
             ->select('vehicles.client_id', DB::raw('count(*) as total_devices'))
             ->join('vehicles', 'vehicles.id', '=', 'assignments.vehicle_id')
@@ -31,7 +78,7 @@ class ClientController extends Controller
             ->groupBy('vehicles.client_id')
             ->pluck('total_devices', 'vehicles.client_id');
 
-        // per-device-model counts (FMC920, FMB920, ...)
+        // device model counts per client
         $modelCounts = DB::table('assignments')
             ->join('vehicles', 'vehicles.id', '=', 'assignments.vehicle_id')
             ->join('devices', 'devices.id', '=', 'assignments.device_id')
@@ -42,7 +89,6 @@ class ClientController extends Controller
             ->get()
             ->groupBy('client_id');
 
-        // attach computed stats for the view
         foreach ($clients as $c) {
             $c->total_devices = (int) ($totals[$c->id] ?? 0);
             $c->models = collect($modelCounts[$c->id] ?? [])
@@ -50,7 +96,7 @@ class ClientController extends Controller
                 ->values();
         }
 
-        return view('clients.index', compact('clients','q'));
+        return [$clients, $q];
     }
 
     // DETAIL PAGE
