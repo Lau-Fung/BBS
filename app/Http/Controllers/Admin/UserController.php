@@ -10,6 +10,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -79,8 +80,8 @@ class UserController extends Controller
     public function edit(User $user)
     {
         return view('admin.users.edit', [
-            'user' => $user->load('roles'),
-            'roles' => Role::all(),
+            'user'  => $user->load('roles'),
+            'roles' => Role::orderBy('name')->get(),
         ]);
     }
 
@@ -89,13 +90,57 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        // $this->authorize('users.assign-roles'); // optional Gate if you add it
-        $request->validate([
-            'roles' => ['array'],
-            'roles.*' => ['exists:roles,name'],
-        ]);
-        $user->syncRoles($request->input('roles', []));
-        return back()->with('status', __('Roles updated.'));
+        $current = $request->user();
+        $isAdmin = $current->hasRole('Admin');
+
+        // Validation
+        $rules = [
+            'name'      => ['required','string','max:100'],
+            'password'  => ['nullable','confirmed','min:8'], // add regexes for stronger policies if you want
+            'roles'     => ['array'],
+            'roles.*'   => ['exists:roles,name'],
+        ];
+
+        // Email: only admins can change
+        if ($isAdmin) {
+            $rules['email'] = [
+                'required','email','max:190',
+                Rule::unique('users','email')->ignore($user->id),
+            ];
+        } else {
+            $rules['email'] = ['required','email','max:190']; // we’ll block the change below
+        }
+
+        $data = $request->validate($rules);
+
+        // Block non-admins from changing email even if they try to tamper with the form
+        if (!$isAdmin && $data['email'] !== $user->email) {
+            return back()
+                ->withErrors(['email' => __('Only administrators can change the email address.')])
+                ->withInput();
+        }
+
+        // Update basic fields
+        $user->name = $data['name'];
+
+        if ($isAdmin && $user->email !== $data['email']) {
+            $user->email = $data['email'];
+            // Optional: require re-verification on email change
+            // $user->email_verified_at = null;
+        }
+
+        if (!empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
+        }
+
+        $user->save();
+
+        // Roles (Admins only)
+        if ($isAdmin) {
+            $user->syncRoles($request->input('roles', []));
+        }
+
+        return back()->with('status', __('User updated successfully.'));
     }
 
     /**

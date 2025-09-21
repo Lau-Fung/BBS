@@ -428,6 +428,7 @@ return [
         'subscription' => 'الاشتراك',
         'export_xlsx'          => 'تصدير XLSX',
         'export_csv'          => 'تصدير ملف CSV',
+        'export_pdf'          => 'تصدير ملف PDF',
     ],
 
     'records' => 'السجلات',
