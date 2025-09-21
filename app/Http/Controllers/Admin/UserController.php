@@ -9,6 +9,7 @@ use Spatie\Permission\Models\Role;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\RedirectResponse;
 
 class UserController extends Controller
 {
@@ -100,8 +101,19 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(User $user): RedirectResponse
     {
-        //
+        // Don’t allow deleting yourself
+        if (auth()->id() === $user->id) {
+            return back()->withErrors(['user' => 'You cannot delete your own account.']);
+        }
+
+        // If using soft deletes:
+        $user->delete();
+
+        // If you want hard delete instead:
+        // $user->forceDelete();
+
+        return back()->with('status', 'User deleted successfully.');
     }
 }

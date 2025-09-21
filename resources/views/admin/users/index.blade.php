@@ -45,6 +45,18 @@
                                                 border border-gray-300 dark:border-gray-600 rounded-md text-xs">
                                             {{ __('messages.common.edit') }}
                                         </a>
+                                        @if(auth()->id() !== $u->id)
+                                        <form method="POST"
+                                            action="{{ route('admin.users.destroy', $u) }}"
+                                            class="d-inline"
+                                            onsubmit="return confirm('Delete this user? This can be undone only if soft deletes are enabled.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    @endif
                                     </td>
                                 </tr>
                             @endforeach
