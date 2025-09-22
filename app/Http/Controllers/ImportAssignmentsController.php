@@ -13,10 +13,11 @@ use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use App\Models\{
-    Assignment, Carrier, Device, DeviceModel, Sensor, SensorModel, Sim, Vehicle
+    Assignment, Carrier, Device, DeviceModel, Sensor, SensorModel, Sim, Vehicle, ClientSheetRow
 };
 use App\Exports\AssignmentsExport;
 use Maatwebsite\Excel\Excel as ExcelWriter;
+use Illuminate\Support\Facades\Storage;
 
 class ImportAssignmentsController extends Controller
 {
@@ -226,6 +227,8 @@ class ImportAssignmentsController extends Controller
                     }
                 }
 
+                $this->upsertClientSheetRow($client, $row);
+
                 // === the rest is identical to your original confirm() ===
                 $imei = (string) $row['imei'];
                 $modelName = $row['model'] ?? $row['device_type'] ?? $row['device_model'] ?? 'UNKNOWN';
@@ -334,6 +337,52 @@ class ImportAssignmentsController extends Controller
 
         return redirect()->route('imports.assignments.form')->with('status', $msg);
     }
+
+    /**
+     * Create/Update the rendered “Advanced sheet row” for the given assignment.
+     * Non-destructive: only overwrites fields we map from $row.
+     */
+    private function upsertClientSheetRow($client, array $row): void
+    {
+        // Reuse existing normalizers
+        $toBool = fn($v) => is_null($v) ? null : (
+            in_array(mb_strtolower(trim((string)$v), 'UTF-8'), ['نعم','yes','y','1','true','فعال','نشط'], true) ? 1 :
+            (in_array(mb_strtolower(trim((string)$v), 'UTF-8'), ['لا','no','n','0','false'], true) ? 0 : null)
+        );
+        $client_sheet_row = new ClientSheetRow([
+            'client_id'   => $client?->id,
+            // Identifiers kept as strings to avoid 8.99e+18 issues
+            'data_package_type'     => $row['data_package_type'] ?? $row['package_type'] ?? null,
+            'sim_type'              => $row['sim_type'] ?? null,
+            'sim_number'            => (string)($row['sim_serial'] ?? $row['msisdn'] ?? ''),
+            'imei'                  => (string)($row['imei'] ?? ''),
+            'plate'                 => $row['plate'] ?? null,
+
+            'installed_on'          => $this->normalizeDate($row['installed_on'] ?? null),
+            'year_model'            => $row['year_model'] ?? $row['year'] ?? null,
+            'company_manufacture'   => $row['company_manufacture'] ?? $row['manufacturer'] ?? null,
+            'device_type'           => $row['device_type'] ?? $row['model'] ?? null,
+
+            // “Green” columns + system/calibration/color/CRM/tech/etc
+            'air'                   => $toBool($row['air'] ?? null),
+            'mechanic'              => $toBool($row['mechanic'] ?? null),
+            'tracking'              => $row['tracking'] ?? null,
+            'system_type'           => $row['system_type'] ?? null,
+
+            'calibration'           => $row['calibration'] ?? null,
+            'color'                 => $row['color'] ?? null,
+            'crm_integration'       => $row['crm'] ?? null,
+            'technician'            => $row['technician'] ?? null,
+            'vehicle_serial_number' => $row['vehicle_serial'] ?? $row['vehicle_number'] ?? null,
+            'vehicle_weight'        => $row['vehicle_weight'] ?? null,
+
+            'user'                  => $row['user'] ?? null,
+            'notes'                 => $row['note'] ?? null,
+        ]);
+
+        $client_sheet_row->save();
+    }
+
 
     /**
      * Pick the longest non-empty text in a row.

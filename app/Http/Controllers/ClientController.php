@@ -114,11 +114,17 @@ class ClientController extends Controller
         return view('clients.show', compact('client', 'headers', 'rows'));
     }
 
-    // EXPORT (XLSX/CSV)
+    // EXPORT (XLSX/CSV/PDF)
     public function export(\App\Models\Client $client)
     {
-        $format = request('format', 'xlsx'); // 'xlsx' or 'csv'
+        $format = request('format', 'xlsx'); // 'xlsx' or 'csv', 'pdf'
         return new ClientAdvancedExport($client, $format);
+    }
+
+     public function createAssignment(Client $client)
+    {
+        // redirect to your assignments.create with the client preselected
+        return redirect()->route('assignments.create', ['client_id' => $client->id]);
     }
 
 }

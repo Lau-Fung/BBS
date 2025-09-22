@@ -44,6 +44,11 @@ class Assignment extends Model
         return $q->where('is_active', true); 
     }
 
+    public function sheetRow()
+    {
+        return $this->hasOne(\App\Models\ClientSheetRow::class);
+    }
+
     // Spatie Query Builder "scope filters"
     public function scopeExpiryFrom($q, $date) {
         $q->whereHas('sim', fn($s) => $s->whereDate('plan_expiry_at','>=',$date));
