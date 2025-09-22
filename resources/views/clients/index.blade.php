@@ -17,7 +17,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                         d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
                 </svg>
-                {{ __('messages.assignments.import_from_excel') }}
+                {{ __('messages.clients.import_from_excel') }}
             </a>
             
             <a  href="{{ route('clients.export.xlsx', ['q' => $q]) }}"
@@ -87,7 +87,7 @@
 
                     <div class="mt-2 text-sm text-gray-600">
                         <div>{{ __('messages.clients.sector') }}: <strong>{{ $c->sector ?? '—' }}</strong></div>
-                        <div>{{ __('messages.clients.vehicles') }}: <strong>{{ $c->vehicles_count }}</strong></div>
+                        <div>{{ __('messages.clients.total_records') }}: <strong>{{ $c->vehicles_count }}</strong></div>
                         <div>{{ __('messages.clients.devices_active') }}: <strong>{{ $c->total_devices }}</strong></div>
                     </div>
 

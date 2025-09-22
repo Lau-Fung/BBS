@@ -35,14 +35,14 @@ class ClientController extends Controller
             return [
                 'Company'         => $c->name,
                 'Sector'          => $c->sector,
-                'Vehicles'        => $c->vehicles_count,
+                'Total Records'   => $c->vehicles_count, // Using sheet rows count
                 'Devices (active)' => $c->total_devices,
                 'Devices by model' => $models,
             ];
         })->toArray();
 
         return Excel::download(new ArrayExport(
-            ['Company','Sector','Vehicles','Devices (active)','Devices by model'],
+            ['Company','Sector','Total Records','Devices (active)','Devices by model'],
             $rows
         ), 'clients-summary.xlsx');
     }
@@ -66,33 +66,30 @@ class ClientController extends Controller
 
         $clients = Client::query()
             ->when($q !== '', fn ($qq) => $qq->where('name', 'like', "%{$q}%"))
-            ->withCount('vehicles')
+            ->withCount('sheetRows')
             ->orderBy('name')
             ->get();
 
-        // active devices per client (active assignments)
-        $totals = Assignment::query()
-            ->select('vehicles.client_id', DB::raw('count(*) as total_devices'))
-            ->join('vehicles', 'vehicles.id', '=', 'assignments.vehicle_id')
-            ->where('assignments.is_active', true)
-            ->groupBy('vehicles.client_id')
-            ->pluck('total_devices', 'vehicles.client_id');
-
-        // device model counts per client
-        $modelCounts = DB::table('assignments')
-            ->join('vehicles', 'vehicles.id', '=', 'assignments.vehicle_id')
-            ->join('devices', 'devices.id', '=', 'assignments.device_id')
-            ->join('device_models', 'device_models.id', '=', 'devices.device_model_id')
-            ->where('assignments.is_active', true)
-            ->groupBy('vehicles.client_id', 'device_models.name')
-            ->select('vehicles.client_id', 'device_models.name as model', DB::raw('count(*) as c'))
+        // Get device counts from client_sheet_rows table
+        $deviceCounts = DB::table('client_sheet_rows')
+            ->select('client_id', 'device_type', DB::raw('count(*) as count'))
+            ->whereNotNull('device_type')
+            ->where('device_type', '!=', '')
+            ->groupBy('client_id', 'device_type')
             ->get()
             ->groupBy('client_id');
 
+        // Get total devices per client
+        $totalDevices = DB::table('client_sheet_rows')
+            ->select('client_id', DB::raw('count(*) as total'))
+            ->groupBy('client_id')
+            ->pluck('total', 'client_id');
+
         foreach ($clients as $c) {
-            $c->total_devices = (int) ($totals[$c->id] ?? 0);
-            $c->models = collect($modelCounts[$c->id] ?? [])
-                ->map(fn($row) => ['model' => $row->model, 'count' => (int) $row->c])
+            $c->total_devices = (int) ($totalDevices[$c->id] ?? 0);
+            $c->vehicles_count = $c->sheet_rows_count; // Use sheet rows count as vehicles count
+            $c->models = collect($deviceCounts[$c->id] ?? [])
+                ->map(fn($row) => ['model' => $row->device_type, 'count' => (int) $row->count])
                 ->values();
         }
 
@@ -102,23 +99,158 @@ class ClientController extends Controller
     // DETAIL PAGE
     public function show(Client $client)
     {
-        $assignments = $client->assignments()
-            ->with(['device.model', 'sim', 'vehicle'])
-            ->where('is_active', true)
+        // Get client sheet rows for display
+        $clientSheetRows = $client->sheetRows()
             ->orderBy('id')
             ->get();
 
-        $headers = AdvancedLayout::headings();
-        $rows    = AdvancedLayout::map($assignments);
+        // Create headers based on client_sheet_rows structure
+        $headers = [
+            'العدد', // Count/Number
+            'نوع الباقة', // Package Type
+            'نوع الشريحة', // SIM Type
+            'رقم الشريحة', // SIM Number
+            'IMEI',
+            'رقم اللوحة', // Plate
+            'تاريخ التركيب', // Installation Date
+            'موديل السنة', // Year Model
+            'اسم الشركة المصنعة للمركبة', // Company Manufacture
+            'نوع الجهاز', // Device Type
+            'هواء', // Air
+            'نوع الحساس', // Sensor Type
+            'ميكانيك', // Mechanic
+            'تتبع', // Tracking
+            'نوع النظام', // System Type
+            'المعيار', // Calibration
+            'لون المركبة', // Vehicle Color
+            'CRM', // CRM Order Number
+            'نوع الاشتراك', // Subscription Type
+            'الفني', // Technician
+            'رقم المركبة', // Vehicle Serial Number
+            'الرقم التسلسلي للمركبة', // Vehicle Serial Number
+            'وزن المركبة', // Vehicle Weight
+            'USER', // User
+            'ملاحظات', // Notes
+        ];
 
-        return view('clients.show', compact('client', 'headers', 'rows'));
+        // Convert client sheet rows to display format
+        $rows = $clientSheetRows->map(function ($row, $index) {
+            return [
+                'no' => $row->no ?? ($index + 1),
+                'package_type' => $row->data_package_type ?? '',
+                'sim_type' => $row->sim_type ?? '',
+                'sim_number' => $row->sim_number ?? '',
+                'imei' => $row->imei ?? '',
+                'plate' => $row->plate ?? '',
+                'installed_on' => $row->installed_on ? $row->installed_on->format('Y-m-d') : '',
+                'year_model' => $row->year_model ?? '',
+                'company_manufacture' => $row->company_manufacture ?? '',
+                'device_type' => $row->device_type ?? '',
+                'air' => $row->air ? 'نعم' : 'لا',
+                'sensor_type' => $row->sensor_type ?? '',
+                'mechanic' => $row->mechanic ? 'نعم' : 'لا',
+                'tracking' => $row->tracking ?? '',
+                'system_type' => $row->system_type ?? '',
+                'calibration' => $row->calibration ?? '',
+                'color' => $row->color ?? '',
+                'crm' => $row->crm_integration ?? '',
+                'subscription_type' => $row->subscription_type ?? '',
+                'technician' => $row->technician ?? '',
+                'vehicle_serial' => $row->vehicle_serial_number ?? '',
+                'vehicle_serial_number' => $row->vehicle_serial_number ?? '',
+                'vehicle_weight' => $row->vehicle_weight ?? '',
+                'user' => $row->user ?? '',
+                'notes' => $row->notes ?? '',
+            ];
+        });
+
+        return view('clients.show', compact('client', 'headers', 'rows', 'clientSheetRows'));
     }
 
     // EXPORT (XLSX/CSV/PDF)
     public function export(\App\Models\Client $client)
     {
         $format = request('format', 'xlsx'); // 'xlsx' or 'csv', 'pdf'
-        return new ClientAdvancedExport($client, $format);
+        
+        // Get client sheet rows for export
+        $clientSheetRows = $client->sheetRows()
+            ->orderBy('id')
+            ->get();
+
+        // Create headers for export
+        $headers = [
+            'العدد', // Count/Number
+            'نوع الباقة', // Package Type
+            'نوع الشريحة', // SIM Type
+            'رقم الشريحة', // SIM Number
+            'IMEI',
+            'رقم اللوحة', // Plate
+            'تاريخ التركيب', // Installation Date
+            'موديل السنة', // Year Model
+            'اسم الشركة المصنعة للمركبة', // Company Manufacture
+            'نوع الجهاز', // Device Type
+            'هواء', // Air
+            'نوع الحساس', // Sensor Type
+            'ميكانيك', // Mechanic
+            'تتبع', // Tracking
+            'نوع النظام', // System Type
+            'المعيار', // Calibration
+            'لون المركبة', // Vehicle Color
+            'CRM', // CRM Order Number
+            'نوع الاشتراك', // Subscription Type
+            'الفني', // Technician
+            'رقم المركبة', // Vehicle Serial Number
+            'الرقم التسلسلي للمركبة', // Vehicle Serial Number
+            'وزن المركبة', // Vehicle Weight
+            'USER', // User
+            'ملاحظات', // Notes
+        ];
+
+        // Convert client sheet rows to export format
+        $rows = $clientSheetRows->map(function ($row, $index) {
+            return [
+                $row->no ?? ($index + 1),
+                $row->data_package_type ?? '',
+                $row->sim_type ?? '',
+                $row->sim_number ?? '',
+                $row->imei ?? '',
+                $row->plate ?? '',
+                $row->installed_on ? $row->installed_on->format('Y-m-d') : '',
+                $row->year_model ?? '',
+                $row->company_manufacture ?? '',
+                $row->device_type ?? '',
+                $row->air ? 'نعم' : 'لا',
+                $row->sensor_type ?? '',
+                $row->mechanic ? 'نعم' : 'لا',
+                $row->tracking ?? '',
+                $row->system_type ?? '',
+                $row->calibration ?? '',
+                $row->color ?? '',
+                $row->crm_integration ?? '',
+                $row->subscription_type ?? '',
+                $row->technician ?? '',
+                $row->vehicle_serial_number ?? '',
+                $row->vehicle_serial_number ?? '',
+                $row->vehicle_weight ?? '',
+                $row->user ?? '',
+                $row->notes ?? '',
+            ];
+        });
+
+        // Handle PDF export differently
+        if ($format === 'pdf') {
+            $pdf = Pdf::loadView('clients.client-details-pdf', [
+                'client' => $client,
+                'headers' => $headers,
+                'rows' => $rows->toArray(),
+                'clientSheetRows' => $clientSheetRows
+            ])->setPaper('a4', 'landscape'); // Use landscape for better table display
+            
+            return $pdf->download('client_' . $client->id . '_data.pdf');
+        }
+        
+        // Create a simple array export for Excel/CSV
+        return Excel::download(new ArrayExport($headers, $rows->toArray()), 'client_' . $client->id . '_data.' . $format);
     }
 
      public function createAssignment(Client $client)
