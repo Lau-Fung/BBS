@@ -351,10 +351,11 @@ class ImportAssignmentsController extends Controller
         );
         $client_sheet_row = new ClientSheetRow([
             'client_id'   => $client?->id,
+            'no'          => $row['no'] ?? null,
             // Identifiers kept as strings to avoid 8.99e+18 issues
             'data_package_type'     => $row['data_package_type'] ?? $row['package_type'] ?? null,
-            'sim_type'              => $row['sim_type'] ?? null,
-            'sim_number'            => (string)($row['sim_serial'] ?? $row['msisdn'] ?? ''),
+            'sim_type'              => $row['sim_type'] ?? $this->pickCarrierName($row) ?? null,
+            'sim_number'            => $row['sim_number'] ?? $row['sim_serial'] ?? $row['msisdn'] ?? null,
             'imei'                  => (string)($row['imei'] ?? ''),
             'plate'                 => $row['plate'] ?? null,
 
@@ -365,6 +366,7 @@ class ImportAssignmentsController extends Controller
 
             // “Green” columns + system/calibration/color/CRM/tech/etc
             'air'                   => $toBool($row['air'] ?? null),
+            'sensor_type'           => $row['sensor_type'] ?? null,
             'mechanic'              => $toBool($row['mechanic'] ?? null),
             'tracking'              => $row['tracking'] ?? null,
             'system_type'           => $row['system_type'] ?? null,
@@ -372,6 +374,7 @@ class ImportAssignmentsController extends Controller
             'calibration'           => $row['calibration'] ?? null,
             'color'                 => $row['color'] ?? null,
             'crm_integration'       => $row['crm'] ?? null,
+            'subscription_type'     => $row['subscription_type'] ?? null,
             'technician'            => $row['technician'] ?? null,
             'vehicle_serial_number' => $row['vehicle_serial'] ?? $row['vehicle_number'] ?? null,
             'vehicle_weight'        => $row['vehicle_weight'] ?? null,
@@ -489,7 +492,7 @@ class ImportAssignmentsController extends Controller
         }
 
         // Fall back to scanning raw headers (normalize to compare)
-        $needles = ['carrier','sim_carrier','carrier_name','نوع_الشريحة','نوع_الباقة'];
+        $needles = ['carrier','sim_carrier','carrier_name','نوع الشريحة','نوع الباقة'];
         $needles = array_map(fn($n) => $this->normHeader($n), $needles);
 
         foreach ($row as $key => $value) {
@@ -558,7 +561,10 @@ class ImportAssignmentsController extends Controller
             'year'          => ['year','موديل المركبة'],
 
             'package_type'   => ['data package type','نوع الباقة','نوع الباقة (data package type)'],
-            'sim_type'       => ['sim type','رقم الشريحة'],
+            'sim_type'       => ['sim type','نوع الشريحة','carrier','sim_carrier','carrier_name'],
+            'sim_number'     => ['sim number','رقم الشريحة','msisdn','sim_serial'],
+            'sensor_type'    => ['sensor type','نوع الحساس'],
+            'subscription_type' => ['subscription type','نوع الاشتراك','نوع الباقة العدد'],
             'manufacturer'   => ['company manufacture','اسم الشركة المصنعة للمركبة','الشركة المصنعة للمركبة'],
             'device_type'    => ['device type','نوع الجهاز','موديل الجهاز'],
             'air'            => ['air','منافيخ'],

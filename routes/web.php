@@ -135,6 +135,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/clients/export/xlsx', [ClientController::class,'exportXlsx'])->name('clients.export.xlsx');
     Route::get('/clients/export/pdf',  [ClientController::class,'exportPdf'])->name('clients.export.pdf');
     Route::get('/clients/{client}/assignments/create', [ClientController::class, 'createAssignment'])->name('clients.assignments.create');
+    
+    // Client Sheet Rows (for direct data entry)
+    Route::get('/clients/{client}/sheet-rows/create', [\App\Http\Controllers\ClientSheetRowController::class, 'create'])->name('clients.sheet-rows.create');
+    Route::post('/clients/{client}/sheet-rows', [\App\Http\Controllers\ClientSheetRowController::class, 'store'])->name('clients.sheet-rows.store');
+    Route::get('/clients/{client}/sheet-rows/{clientSheetRow}/edit', [\App\Http\Controllers\ClientSheetRowController::class, 'edit'])->name('clients.sheet-rows.edit');
+    Route::put('/clients/{client}/sheet-rows/{clientSheetRow}', [\App\Http\Controllers\ClientSheetRowController::class, 'update'])->name('clients.sheet-rows.update');
+    Route::delete('/clients/{client}/sheet-rows/{clientSheetRow}', [\App\Http\Controllers\ClientSheetRowController::class, 'destroy'])->name('clients.sheet-rows.destroy');
+    
+    // Test route to debug 405 error
+    Route::post('/test-update-all', function() { return response()->json(['success' => true, 'message' => 'Test route works']); })->name('test.update-all');
+});
+
+// Edit All functionality - Outside middleware group to avoid conflicts
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/clients/{client}/edit-all-sheet-rows', [\App\Http\Controllers\ClientSheetRowController::class, 'editAll'])->name('clients.sheet-rows.edit-all');
+    Route::post('/clients/{client}/update-all-sheet-rows', [\App\Http\Controllers\ClientSheetRowController::class, 'updateAll'])->name('clients.sheet-rows.update-all');
 });
 
 require __DIR__.'/auth.php';
