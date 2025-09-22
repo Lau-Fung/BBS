@@ -15,6 +15,11 @@ class Client extends Model
         return $this->hasMany(Vehicle::class);
     }
 
+    public function sheetRows()
+    {
+        return $this->hasMany(\App\Models\ClientSheetRow::class);
+    }
+
     // assignments linked via vehicles
     public function assignments(): HasManyThrough
     {
