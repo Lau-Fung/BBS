@@ -10,6 +10,8 @@ use Laravel\Fortify\Fortify;
 use Illuminate\Support\Facades\Validator;
 use Anhskohbo\NoCaptcha\NoCaptcha;
 
+use Laravel\Fortify\Contracts\ConfirmPasswordViewResponse;
+
 class FortifyServiceProvider extends ServiceProvider
 {
     public function register(): void {}
@@ -22,6 +24,16 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::requestPasswordResetLinkView(fn() => view('auth.forgot-password'));
         Fortify::resetPasswordView(fn ($req) => view('auth.reset-password', ['request' => $req]));
         Fortify::twoFactorChallengeView(fn() => view('auth.two-factor-challenge'));
+        // Add confirm password binding
+        $this->app->singleton(ConfirmPasswordViewResponse::class, function () {
+            return new class implements ConfirmPasswordViewResponse {
+                public function toResponse($request)
+                {
+                    return response()->view('auth.confirm-password');
+                }
+            };
+        });
+
         Fortify::authenticateUsing(function (\Illuminate\Http\Request $request) {
             Validator::make($request->all(), [
                 'g-recaptcha-response' => ['required','captcha'],
