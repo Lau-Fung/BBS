@@ -107,6 +107,27 @@
                     </a>
                 </li>
 
+                {{-- Security Status --}}
+                @auth
+                    <li class="nav-item me-3">
+                        <a href="{{ route('profile.security') }}" 
+                           class="nav-link d-flex align-items-center {{ request()->routeIs('profile.security') ? 'active' : '' }}"
+                           title="{{ auth()->user()->two_factor_secret ? __('messages.security.enabled') : __('messages.security.disabled') }}">
+                            @if(auth()->user()->two_factor_secret)
+                                <svg class="w-4 h-4 text-green-600 me-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="small text-green-600">{{ __('messages.security.enabled') }}</span>
+                            @else
+                                <svg class="w-4 h-4 text-gray-400 me-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="small text-gray-500">{{ __('messages.security.disabled') }}</span>
+                            @endif
+                        </a>
+                    </li>
+                @endauth
+
                 {{-- Profile --}}
                 @auth
                     <li class="nav-item dropdown">
