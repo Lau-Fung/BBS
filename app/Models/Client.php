@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use App\Traits\LogsActivity;
 
 class Client extends Model
 {
+    use LogsActivity;
+    
     protected $fillable = ['name','sector','subscription_type'];
 
     public function vehicles(): HasMany

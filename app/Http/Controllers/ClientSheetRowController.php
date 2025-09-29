@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\ClientSheetRow;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Services\ActivityLogService;
 
 class ClientSheetRowController extends Controller
 {
@@ -227,6 +228,14 @@ class ClientSheetRowController extends Controller
                 ]);
                 $updatedCount++;
             }
+        }
+
+        // Log bulk operation
+        if ($updatedCount > 0) {
+            ActivityLogService::logBulkOperation('update', 'ClientSheetRow', $updatedCount, [
+                'client_id' => $client->id,
+                'client_name' => $client->name,
+            ]);
         }
 
         return response()->json([

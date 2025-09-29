@@ -12,6 +12,7 @@ use App\Exports\ArrayExport;
 use Maatwebsite\Excel\Excel as ExcelWriter;
 use App\Support\Layouts\AdvancedLayout;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\ActivityLogService;
 
 class ClientController extends Controller
 {
@@ -41,6 +42,9 @@ class ClientController extends Controller
             ];
         })->toArray();
 
+        // Log export activity
+        ActivityLogService::logExport('clients_summary', 'xlsx', count($rows));
+
         return Excel::download(new ArrayExport(
             ['Company','Sector','Total Records','Devices (active)','Devices by model'],
             $rows
@@ -50,6 +54,9 @@ class ClientController extends Controller
     public function exportPdf(Request $request)
     {
         [$clients, $q] = $this->buildSummary($request);
+
+        // Log export activity
+        ActivityLogService::logExport('clients_summary', 'pdf', count($clients));
 
         $pdf = Pdf::loadView('clients.summary-pdf', [
             'clients' => $clients,
@@ -236,6 +243,9 @@ class ClientController extends Controller
                 $row->notes ?? '',
             ];
         });
+
+        // Log export activity
+        ActivityLogService::logExport('client_details', $format, count($rows), ['client_id' => $client->id]);
 
         // Handle PDF export differently
         if ($format === 'pdf') {

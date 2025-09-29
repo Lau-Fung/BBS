@@ -13,6 +13,7 @@ use App\Http\Controllers\CarrierController;
 use App\Http\Controllers\ImportAssignmentsController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ActivityLogController;
 
 Route::get('/', fn () => view('welcome'));
 
@@ -145,6 +146,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Test route to debug 405 error
     Route::post('/test-update-all', function() { return response()->json(['success' => true, 'message' => 'Test route works']); })->name('test.update-all');
+    
+    // Activity Logs
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('/activity-logs/{activity}', [ActivityLogController::class, 'show'])->name('activity-logs.show');
+    Route::get('/activity-logs-stats', [ActivityLogController::class, 'stats'])->name('activity-logs.stats');
+    Route::get('/activity-logs-quick-stats', [ActivityLogController::class, 'quickStats'])->name('activity-logs.quick-stats');
+    Route::get('/activity-logs/export/csv', [ActivityLogController::class, 'exportCsv'])->name('activity-logs.export.csv');
+    Route::get('/activity-logs/export/pdf', [ActivityLogController::class, 'exportPdf'])->name('activity-logs.export.pdf');
 });
 
 // Edit All functionality - Outside middleware group to avoid conflicts

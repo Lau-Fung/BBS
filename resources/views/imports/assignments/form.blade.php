@@ -17,7 +17,7 @@
                 @php($clients = \App\Models\Client::orderBy('name')->pluck('name','id'))
                 <form method="post" action="{{ route('imports.assignments.preview') }}" enctype="multipart/form-data" class="space-y-4">
                     @csrf
-                    <div>
+                    <div class="mb-3">
                         {{-- <label class="block mb-2">{{ __('messages.assignments.default_client_optional') }}</label>
                         <select name="client_id" class="border rounded mb-4">
                             <option value="">{{ __('messages.assignments.none') }}</option>
@@ -31,7 +31,15 @@
                           <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
                         @enderror
                     </div>
-                    <x-primary-button>{{ __('messages.assignments.preview') }}</x-primary-button>
+                    <button type="submit" class="inline-flex items-center px-6 py-3 font-medium rounded-lg transition-all duration-200 text-white shadow-lg hover:shadow-xl"
+                            style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
+                            onmouseover="this.style.background='linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'"
+                            onmouseout="this.style.background='linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {{ __('messages.assignments.preview') }}
+                    </button>
                 </form>
             </div>
         </div>
