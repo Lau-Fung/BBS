@@ -7,9 +7,10 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ActivityLogsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths
+class ActivityLogsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths, WithCustomCsvSettings
 {
     protected $activities;
 
@@ -79,6 +80,15 @@ class ActivityLogsExport implements FromCollection, WithHeadings, WithMapping, W
             'I' => 15,  // IP Address
             'J' => 30,  // User Agent
             'K' => 20,  // Created At
+        ];
+    }
+
+    public function getCsvSettings(): array
+    {
+        return [
+            'use_bom' => true,
+            'input_encoding' => 'UTF-8',
+            'output_encoding' => 'UTF-8',
         ];
     }
 }

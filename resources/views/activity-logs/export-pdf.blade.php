@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ __('messages.activity_logs.title') }} - {{ __('messages.common.export') }}</title>
     <style>
+        /* Use DejaVu Sans for Arabic; set document direction based on locale */
+        @page { margin: 20px; }
+        body { direction: {{ app()->getLocale()==='ar' ? 'rtl' : 'ltr' }}; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'DejaVu Sans', sans-serif;
             font-size: 12px;
             line-height: 1.4;
             color: #333;
@@ -85,7 +88,7 @@
             color: #374151;
             font-weight: bold;
             padding: 12px 8px;
-            text-align: left;
+            text-align: {{ app()->getLocale()==='ar' ? 'right' : 'left' }};
             border: 1px solid #d1d5db;
             font-size: 11px;
         }

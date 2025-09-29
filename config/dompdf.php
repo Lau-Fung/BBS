@@ -179,7 +179,8 @@ return [
          *
          * @var string
          */
-        'default_font' => 'serif',
+        // Use DejaVu Sans which supports Arabic glyphs
+        'default_font' => 'DejaVu Sans',
 
         /**
          * Image DPI setting

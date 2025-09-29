@@ -120,21 +120,18 @@ class ClientController extends Controller
             'IMEI',
             'رقم اللوحة', // Plate
             'تاريخ التركيب', // Installation Date
-            'موديل السنة', // Year Model
+            'موديل المركبة', // Year Model
             'اسم الشركة المصنعة للمركبة', // Company Manufacture
             'نوع الجهاز', // Device Type
-            'هواء', // Air
-            'نوع الحساس', // Sensor Type
-            'ميكانيك', // Mechanic
+            'منافيخ', // Air
+            'سست', // Mechanic
             'تتبع', // Tracking
-            'نوع النظام', // System Type
-            'المعيار', // Calibration
+            'نظام التتبع', // System Type
+            'المعايرة', // Calibration
             'لون المركبة', // Vehicle Color
-            'CRM', // CRM Order Number
-            'نوع الاشتراك', // Subscription Type
+            'رقم الطلبcrm', // CRM Integration
             'الفني', // Technician
-            'رقم المركبة', // Vehicle Serial Number
-            'الرقم التسلسلي للمركبة', // Vehicle Serial Number
+            'الرقم التسلسلي للسيارة', // Vehicle Serial Number
             'وزن المركبة', // Vehicle Weight
             'USER', // User
             'ملاحظات', // Notes
@@ -154,7 +151,6 @@ class ClientController extends Controller
                 'company_manufacture' => $row->company_manufacture ?? '',
                 'device_type' => $row->device_type ?? '',
                 'air' => $row->air ? 'نعم' : 'لا',
-                'sensor_type' => $row->sensor_type ?? '',
                 'mechanic' => $row->mechanic ? 'نعم' : 'لا',
                 'tracking' => $row->tracking ?? '',
                 'system_type' => $row->system_type ?? '',
@@ -163,7 +159,6 @@ class ClientController extends Controller
                 'crm' => $row->crm_integration ?? '',
                 'subscription_type' => $row->subscription_type ?? '',
                 'technician' => $row->technician ?? '',
-                'vehicle_serial' => $row->vehicle_serial_number ?? '',
                 'vehicle_serial_number' => $row->vehicle_serial_number ?? '',
                 'vehicle_weight' => $row->vehicle_weight ?? '',
                 'user' => $row->user ?? '',
@@ -193,21 +188,18 @@ class ClientController extends Controller
             'IMEI',
             'رقم اللوحة', // Plate
             'تاريخ التركيب', // Installation Date
-            'موديل السنة', // Year Model
+            'موديل المركبة', // Year Model
             'اسم الشركة المصنعة للمركبة', // Company Manufacture
             'نوع الجهاز', // Device Type
-            'هواء', // Air
-            'نوع الحساس', // Sensor Type
-            'ميكانيك', // Mechanic
+            'منافيخ', // Air
+            'سست', // Mechanic
             'تتبع', // Tracking
-            'نوع النظام', // System Type
-            'المعيار', // Calibration
+            'نظام التتبع', // System Type
+            'المعايرة', // Calibration
             'لون المركبة', // Vehicle Color
-            'CRM', // CRM Order Number
-            'نوع الاشتراك', // Subscription Type
+            'رقم الطلبcrm', // CRM Integration
             'الفني', // Technician
-            'رقم المركبة', // Vehicle Serial Number
-            'الرقم التسلسلي للمركبة', // Vehicle Serial Number
+            'الرقم التسلسلي للسيارة', // Vehicle Serial Number
             'وزن المركبة', // Vehicle Weight
             'USER', // User
             'ملاحظات', // Notes
@@ -227,16 +219,13 @@ class ClientController extends Controller
                 $row->company_manufacture ?? '',
                 $row->device_type ?? '',
                 $row->air ? 'نعم' : 'لا',
-                $row->sensor_type ?? '',
                 $row->mechanic ? 'نعم' : 'لا',
                 $row->tracking ?? '',
                 $row->system_type ?? '',
                 $row->calibration ?? '',
                 $row->color ?? '',
                 $row->crm_integration ?? '',
-                $row->subscription_type ?? '',
                 $row->technician ?? '',
-                $row->vehicle_serial_number ?? '',
                 $row->vehicle_serial_number ?? '',
                 $row->vehicle_weight ?? '',
                 $row->user ?? '',
