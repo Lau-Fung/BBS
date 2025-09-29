@@ -145,7 +145,10 @@
 <!-- Action Buttons -->
 <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
     <button type="submit" 
-            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 font-medium rounded-lg transition-colors duration-200 flex items-center">
+            class="px-6 py-3 font-medium rounded-lg transition-all duration-200 flex items-center text-white shadow-lg hover:shadow-xl"
+            style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
+            onmouseover="this.style.background='linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'"
+            onmouseout="this.style.background='linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'">
         @if(isset($assignment) && $assignment->exists)
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -159,7 +162,10 @@
         @endif
     </button>
     <a href="{{ route('assignments.index') }}" 
-       class="px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors duration-200">
+       class="px-6 py-3 font-medium rounded-lg transition-all duration-200 text-white shadow-lg hover:shadow-xl"
+       style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);"
+       onmouseover="this.style.background='linear-gradient(135deg, #4b5563 0%, #374151 100%)'"
+       onmouseout="this.style.background='linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'">
         {{ __('messages.common.cancel') }}
     </a>
 </div>

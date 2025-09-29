@@ -132,7 +132,14 @@
                 </div>
 
                 <div class="mt-6 flex items-center gap-3">
-                    <a href="{{ route('imports.assignments.form') }}" class="text-gray-600 hover:underline">
+                    <a href="{{ route('imports.assignments.form') }}"
+                       class="inline-flex items-center px-6 py-3 font-medium rounded-lg transition-all duration-200 text-white shadow-lg hover:shadow-xl"
+                       style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);"
+                       onmouseover="this.style.background='linear-gradient(135deg, #4b5563 0%, #374151 100%)'"
+                       onmouseout="this.style.background='linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
                         {{ __('messages.assignments.back_to_upload') }}
                     </a>
 
@@ -145,7 +152,15 @@
                             <input type="hidden" name="default_subscription_type" value="{{ $sheetDefaults['subscription_type'] ?? '' }}">
                             {{-- also carry the form’s selected client (if any) --}}
                             <input type="hidden" name="client_id" value="{{ $defaultClientId ?? '' }}">
-                            <x-primary-button>{{ __('messages.assignments.confirm_import') }}</x-primary-button>
+                            <button type="submit" class="inline-flex items-center px-6 py-3 font-medium rounded-lg transition-all duration-200 text-white shadow-lg hover:shadow-xl"
+                                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"
+                                    onmouseover="this.style.background='linear-gradient(135deg, #059669 0%, #047857 100%)'"
+                                    onmouseout="this.style.background='linear-gradient(135deg, #10b981 0%, #059669 100%)'">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                {{ __('messages.assignments.confirm_import') }}
+                            </button>
                         </form>
                     @else
                         <button disabled

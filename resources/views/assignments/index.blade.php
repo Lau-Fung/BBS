@@ -9,7 +9,10 @@
                 </div>
                 <div class="flex flex-row gap-3 justify-center items-center">
                     <a href="{{ route('assignments.create') }}" 
-                    class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                    class="inline-flex items-center px-6 py-3 mb-3 font-medium rounded-lg transition-all duration-200 text-white shadow-lg hover:shadow-xl"
+                    style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
+                    onmouseover="this.style.background='linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'"
+                    onmouseout="this.style.background='linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -17,7 +20,10 @@
                         {{ __('messages.assignments.new') }}
                     </a>
                     <a href="{{ route('imports.assignments.form') }}" 
-                    class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 mb-3 font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                    class="inline-flex items-center px-6 py-3 mb-3 font-medium rounded-lg transition-all duration-200 text-white shadow-lg hover:shadow-xl"
+                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"
+                    onmouseover="this.style.background='linear-gradient(135deg, #059669 0%, #047857 100%)'"
+                    onmouseout="this.style.background='linear-gradient(135deg, #10b981 0%, #059669 100%)'">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                 d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />

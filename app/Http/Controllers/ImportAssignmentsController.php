@@ -18,6 +18,7 @@ use App\Models\{
 use App\Exports\AssignmentsExport;
 use Maatwebsite\Excel\Excel as ExcelWriter;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ActivityLogService;
 
 class ImportAssignmentsController extends Controller
 {
@@ -334,6 +335,14 @@ class ImportAssignmentsController extends Controller
             $created['sensors'], $updated['sensors'],
             $created['assignments'], $updated['assignments']
         );
+
+        // Log import activity
+        $totalRecords = array_sum($created) + array_sum($updated);
+        ActivityLogService::logImport('assignments', $totalRecords, $request->file('file')?->getClientOriginalName(), [
+            'created' => $created,
+            'updated' => $updated,
+            'sheets_processed' => count($perSheet ?? []),
+        ]);
 
         return redirect()->route('imports.assignments.form')->with('status', $msg);
     }
@@ -957,6 +966,9 @@ class ImportAssignmentsController extends Controller
         ]);
 
         $file = 'assignments_' . now()->format('Ymd_His') . '.' . $format;
+
+        // Log export activity
+        ActivityLogService::logExport('assignments', $format, null, $filters);
 
         return Excel::download(
             new AssignmentsExport($filters),

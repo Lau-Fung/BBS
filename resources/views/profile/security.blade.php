@@ -24,21 +24,23 @@
                 </div>
             @endif
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+            <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg" style="border: 1px solid #e5e7eb;">
+                <div class="p-8 text-gray-900">
                     
                     {{-- Two-Factor Authentication Section --}}
-                    <div class="mb-8">
+                    <div class="mb-8 m-3">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-medium text-gray-900">
                                 {{ __('messages.security.two_factor_authentication') }}
                             </h3>
                             @if (auth()->user()->two_factor_secret)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold text-white shadow-lg"
+                                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                                     {{ __('messages.security.enabled') }}
                                 </span>
                             @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold text-white shadow-lg"
+                                      style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
                                     {{ __('messages.security.disabled') }}
                                 </span>
                             @endif
@@ -46,7 +48,7 @@
 
                         @if (! auth()->user()->two_factor_secret)
                             {{-- Enable 2FA --}}
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <div class="rounded-lg p-6 mb-6 shadow-lg" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 1px solid #3b82f6;">
                                 <div class="flex">
                                     <div class="flex-shrink-0">
                                         <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -66,7 +68,10 @@
 
                             <form method="POST" action="{{ url('/user/two-factor-authentication') }}">
                                 @csrf
-                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                <button type="submit" class="inline-flex items-center px-6 py-3 font-semibold text-sm rounded-lg transition-all duration-200 text-white shadow-lg hover:shadow-xl"
+                                        style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
+                                        onmouseover="this.style.background='linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'"
+                                        onmouseout="this.style.background='linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                                     </svg>
@@ -76,7 +81,7 @@
 
                         @else
                             {{-- 2FA is enabled --}}
-                            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                            <div class="rounded-lg p-6 mb-6 shadow-lg" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border: 1px solid #10b981;">
                                 <div class="flex">
                                     <div class="flex-shrink-0">
                                         <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -146,7 +151,10 @@
 
                                 <form method="POST" action="{{ url('/user/two-factor-recovery-codes') }}" class="inline">
                                     @csrf
-                                    <button type="submit" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-white shadow-lg hover:shadow-xl"
+                                            style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);"
+                                            onmouseover="this.style.background='linear-gradient(135deg, #4b5563 0%, #374151 100%)'"
+                                            onmouseout="this.style.background='linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                         </svg>
@@ -157,10 +165,10 @@
 
                             {{-- Disable 2FA Section --}}
                             <div class="border-t border-gray-200 pt-6">
-                                <h4 class="text-lg font-medium text-red-900 mb-3">
+                                <h4 class="text-lg font-medium text-red-900 mb-4">
                                     {{ __('messages.security.danger_zone') }}
                                 </h4>
-                                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div class="rounded-lg p-6 shadow-lg" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 1px solid #ef4444;">
                                     <div class="flex">
                                         <div class="flex-shrink-0">
                                             <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -180,7 +188,10 @@
                                                     @method('DELETE')
                                                     <button type="submit" 
                                                             onclick="return confirm('{{ __('messages.security.confirm_disable') }}')"
-                                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                                            class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-white shadow-lg hover:shadow-xl"
+                                                            style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"
+                                                            onmouseover="this.style.background='linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'"
+                                                            onmouseout="this.style.background='linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'">
                                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                                                         </svg>
