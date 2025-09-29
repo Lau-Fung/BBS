@@ -53,7 +53,7 @@
                         <!-- Package Type -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.package_type') }}
+                                {{ __('messages.clients.package_type') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][data_package_type]" 
@@ -65,7 +65,7 @@
                         <!-- SIM Type -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.sim_type') }}
+                                {{ __('messages.clients.sim_type') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][sim_type]" 
@@ -77,7 +77,7 @@
                         <!-- SIM Number -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.sim_number') }}
+                                {{ __('messages.clients.sim_number') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][sim_number]" 
@@ -101,7 +101,7 @@
                         <!-- Plate -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.plate') }}
+                                {{ __('messages.clients.plate') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][plate]" 
@@ -113,7 +113,7 @@
                         <!-- Installed On -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.installed_on') }}
+                                {{ __('messages.clients.installed_on') }}
                             </label>
                             <input type="date" 
                                    name="rows[{{ $index }}][installed_on]" 
@@ -125,7 +125,7 @@
                         <!-- Year Model -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.year_model') }}
+                                {{ __('messages.clients.year_model') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][year_model]" 
@@ -137,7 +137,7 @@
                         <!-- Manufacturer -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.manufacturer') }}
+                                {{ __('messages.clients.manufacturer') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][company_manufacture]" 
@@ -149,7 +149,7 @@
                         <!-- Device Type -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.device_type') }}
+                                {{ __('messages.clients.device_type') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][device_type]" 
@@ -161,7 +161,7 @@
                         <!-- Air -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.air') }}
+                                {{ __('messages.clients.air') }}
                             </label>
                             <select name="rows[{{ $index }}][air]" 
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -174,7 +174,7 @@
                         <!-- Sensor Type -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.sensor_type') }}
+                                {{ __('messages.clients.sensor_type') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][sensor_type]" 
@@ -186,7 +186,7 @@
                         <!-- Mechanic -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.mechanic') }}
+                                {{ __('messages.clients.mechanic') }}
                             </label>
                             <select name="rows[{{ $index }}][mechanic]" 
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -199,7 +199,7 @@
                         <!-- Tracking -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.tracking') }}
+                                {{ __('messages.clients.tracking') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][tracking]" 
@@ -211,7 +211,7 @@
                         <!-- System Type -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.system_type') }}
+                                {{ __('messages.clients.system_type') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][system_type]" 
@@ -223,7 +223,7 @@
                         <!-- Calibration -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.calibration') }}
+                                {{ __('messages.clients.calibration') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][calibration]" 
@@ -235,7 +235,7 @@
                         <!-- Color -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.color') }}
+                                {{ __('messages.clients.color') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][color]" 
@@ -247,19 +247,19 @@
                         <!-- CRM -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.crm') }}
+                                {{ __('messages.clients.crm') }}
                             </label>
                             <input type="text" 
-                                   name="rows[{{ $index }}][crm_order_number]" 
-                                   value="{{ $row->crm_order_number ?? '' }}" 
+                                   name="rows[{{ $index }}][crm_integration]" 
+                                   value="{{ $row->crm_integration ?? '' }}" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   data-original="{{ $row->crm_order_number ?? '' }}">
+                                   data-original="{{ $row->crm_integration ?? '' }}">
                         </div>
 
                         <!-- Subscription Type -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.subscription_type') }}
+                                {{ __('messages.clients.subscription') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][subscription_type]" 
@@ -271,7 +271,7 @@
                         <!-- Technician -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.technician') }}
+                                {{ __('messages.clients.technician') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][technician]" 
@@ -283,7 +283,7 @@
                         <!-- Vehicle Serial -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.vehicle_serial') }}
+                                {{ __('messages.clients.vehicle_serial') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][vehicle_serial_number]" 
@@ -295,7 +295,7 @@
                         <!-- Vehicle Weight -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.vehicle_weight') }}
+                                {{ __('messages.clients.vehicle_weight') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][vehicle_weight]" 
@@ -307,7 +307,7 @@
                         <!-- User -->
                         <div class="space-y-1">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.user') }}
+                                {{ __('messages.clients.user') }}
                             </label>
                             <input type="text" 
                                    name="rows[{{ $index }}][user]" 
@@ -319,7 +319,7 @@
                         <!-- Notes -->
                         <div class="space-y-1 md:col-span-2 lg:col-span-3">
                             <label class="block text-sm font-medium text-gray-700">
-                                {{ __('messages.assignments.notes') }}
+                                {{ __('messages.clients.notes') }}
                             </label>
                             <textarea name="rows[{{ $index }}][notes]" 
                                       rows="3" 

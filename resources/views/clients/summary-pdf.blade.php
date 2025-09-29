@@ -1,3 +1,43 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <title>{{ __('messages.clients.title') }}</title>
+    <style>
+        @page { margin: 18px; }
+        body { direction: {{ app()->getLocale()==='ar' ? 'rtl' : 'ltr' }}; font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color:#111827; }
+        .header { text-align:center; margin-bottom:10px; }
+        .title { font-size:18px; font-weight:bold; }
+        table { width:100%; border-collapse:collapse; }
+        th, td { border:1px solid #d1d5db; padding:6px 5px; }
+        th { background:#f3f4f6; text-align: {{ app()->getLocale()==='ar' ? 'right' : 'left' }}; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">{{ __('messages.clients.title') }}</div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                @foreach(($headers ?? []) as $h)
+                    <th>{{ $h }}</th>
+                @endforeach
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(($rows ?? []) as $r)
+                <tr>
+                    @foreach($r as $cell)
+                        <td>{{ is_scalar($cell) ? $cell : '' }}</td>
+                    @endforeach
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</body>
+</html>
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>

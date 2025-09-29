@@ -187,7 +187,7 @@ class ClientSheetRowController extends Controller
             'rows.*.system_type' => 'nullable|string|max:255',
             'rows.*.calibration' => 'nullable|string|max:255',
             'rows.*.color' => 'nullable|string|max:255',
-            'rows.*.crm_order_number' => 'nullable|string|max:255',
+            'rows.*.crm_integration' => 'nullable|string|max:255',
             'rows.*.subscription_type' => 'nullable|string|max:255',
             'rows.*.technician' => 'nullable|string|max:255',
             'rows.*.vehicle_serial_number' => 'nullable|string|max:255',
@@ -200,32 +200,35 @@ class ClientSheetRowController extends Controller
         
         foreach ($request->rows as $rowData) {
             $clientSheetRow = ClientSheetRow::find($rowData['id']);
-            if ($clientSheetRow) {
-                $clientSheetRow->update([
-                    'data_package_type' => $rowData['data_package_type'] ?? null,
-                    'sim_type' => $rowData['sim_type'] ?? null,
-                    'sim_number' => $rowData['sim_number'] ?? null,
-                    'imei' => $rowData['imei'] ?? null,
-                    'plate' => $rowData['plate'] ?? null,
-                    'installed_on' => $rowData['installed_on'] ?? null,
-                    'year_model' => $rowData['year_model'] ?? null,
-                    'company_manufacture' => $rowData['company_manufacture'] ?? null,
-                    'device_type' => $rowData['device_type'] ?? null,
-                    'air' => $rowData['air'] ?? false,
-                    'sensor_type' => $rowData['sensor_type'] ?? null,
-                    'mechanic' => $rowData['mechanic'] ?? false,
-                    'tracking' => $rowData['tracking'] ?? null,
-                    'system_type' => $rowData['system_type'] ?? null,
-                    'calibration' => $rowData['calibration'] ?? null,
-                    'color' => $rowData['color'] ?? null,
-                    'crm_order_number' => $rowData['crm_order_number'] ?? null,
-                    'subscription_type' => $rowData['subscription_type'] ?? null,
-                    'technician' => $rowData['technician'] ?? null,
-                    'vehicle_serial_number' => $rowData['vehicle_serial_number'] ?? null,
-                    'vehicle_weight' => $rowData['vehicle_weight'] ?? null,
-                    'user' => $rowData['user'] ?? null,
-                    'notes' => $rowData['notes'] ?? null,
-                ]);
+            if (!$clientSheetRow) { continue; }
+
+            $update = [];
+
+            // Only update fields that are actually provided with a non-empty value
+            $assignIfPresent = function (string $key) use (&$update, $rowData) {
+                if (array_key_exists($key, $rowData)) {
+                    $val = $rowData[$key];
+                    if ($val !== '' && $val !== null) {
+                        $update[$key] = $val;
+                    }
+                }
+            };
+
+            foreach ([
+                'data_package_type','sim_type','sim_number','imei','plate','installed_on','year_model',
+                'company_manufacture','device_type','tracking','system_type','calibration','color',
+                'crm_integration','subscription_type', 'technician','vehicle_serial_number','vehicle_weight','user','notes'
+            ] as $f) { $assignIfPresent($f); }
+
+            // Booleans: explicitly set if present, otherwise keep original
+            foreach (['air','mechanic'] as $b) {
+                if (array_key_exists($b, $rowData)) {
+                    $update[$b] = (bool) (is_string($rowData[$b]) ? (int)$rowData[$b] : $rowData[$b]);
+                }
+            }
+
+            if (!empty($update)) {
+                $clientSheetRow->update($update);
                 $updatedCount++;
             }
         }

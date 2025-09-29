@@ -1,4 +1,70 @@
 <!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <title>{{ __('messages.clients.details') }} - {{ $client->name ?? '' }}</title>
+    <style>
+        @page { margin: 18px; }
+        body {
+            direction: {{ app()->getLocale()==='ar' ? 'rtl' : 'ltr' }};
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 11px;
+            color: #111827;
+        }
+        .header { text-align: center; margin-bottom: 10px; }
+        .title { font-size: 18px; font-weight: bold; }
+        .subtitle { color: #6b7280; font-size: 12px; }
+        .info-box {
+            border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; margin: 12px 0;
+            background: #f9fafb;
+        }
+        .info-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px 12px; }
+        .label { color:#374151; font-weight: bold; }
+        .value { color:#111827; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th, td { border: 1px solid #d1d5db; padding: 6px 5px; }
+        th { background: #f3f4f6; text-align: {{ app()->getLocale()==='ar' ? 'right' : 'left' }}; font-weight: bold; }
+        td { vertical-align: top; }
+        .muted { color:#6b7280; }
+    </style>
+    </head>
+<body>
+    <div class="header">
+        <div class="title">{{ __('messages.clients.details') }}</div>
+        <div class="subtitle">{{ __('messages.common.report') }} - {{ now()->format('Y-m-d H:i') }}</div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-grid">
+            <div><span class="label">{{ __('messages.clients.name') }}:</span> <span class="value">{{ $client->name ?? '' }}</span></div>
+            <div><span class="label">{{ __('messages.clients.sector') }}:</span> <span class="value">{{ $client->sector ?? __('messages.common.not_specified') }}</span></div>
+            <div><span class="label">{{ __('messages.clients.subscription') }}:</span> <span class="value">{{ $client->subscription_type ?? __('messages.common.not_specified') }}</span></div>
+            <div><span class="label">{{ __('messages.activity_logs.total_records') }}:</span> <span class="value">{{ count($rows ?? []) }}</span></div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                @foreach(($headers ?? []) as $h)
+                    <th>{{ $h }}</th>
+                @endforeach
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(($rows ?? []) as $r)
+                <tr>
+                    @foreach($r as $cell)
+                        <td>{{ is_scalar($cell) ? $cell : '' }}</td>
+                    @endforeach
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</body>
+</html>
+
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -58,35 +124,41 @@
             font-size: 9px;
         }
         
-        table {
+         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 8px;
-            font-size: 7px;
-            table-layout: fixed;
+             font-size: 7px;
+             table-layout: auto; /* allow columns to size to content */
         }
+         thead { display: table-header-group; }
+         tfoot { display: table-row-group; }
+         tr    { page-break-inside: avoid; }
         
-        th {
+         th {
             background-color: #34495e;
             color: white;
-            padding: 4px 2px;
+             padding: 3px 2px;
             text-align: center;
-            font-weight: bold;
+            font-weight: normal; /* bold can break Arabic shaping in some PDF engines */
             border: 1px solid #2c3e50;
-            font-size: 7px;
-            white-space: nowrap;
-            overflow: hidden;
+             font-size: 6.5px; /* slightly smaller to fit multi-line */
+             white-space: normal;        /* allow wrapping */
+             word-break: normal;         /* keep Arabic letters intact */
+             line-height: 1.35;
+            overflow: visible;
+            direction: rtl;                /* ensure RTL shaping */
+            unicode-bidi: isolate-override; /* stronger bidi handling for Arabic */
         }
         
-        td {
+         td {
             padding: 3px 2px;
             border: 1px solid #ddd;
             text-align: center;
             vertical-align: middle;
-            word-wrap: break-word;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
+             word-wrap: break-word;
+            white-space: normal;
+            overflow: visible;
         }
         
         tr:nth-child(even) {
@@ -116,8 +188,7 @@
         .long-text {
             white-space: normal;
             word-wrap: break-word;
-            max-height: 20px;
-            overflow: hidden;
+            overflow: visible;
         }
         
         /* Ensure Arabic text displays correctly */
@@ -126,31 +197,7 @@
             direction: rtl;
         }
         
-        /* Column widths for better distribution - Total: 100% */
-        th:nth-child(1), td:nth-child(1) { width: 2%; }  /* No */
-        th:nth-child(2), td:nth-child(2) { width: 4%; }  /* Package Type */
-        th:nth-child(3), td:nth-child(3) { width: 4%; }  /* SIM Type */
-        th:nth-child(4), td:nth-child(4) { width: 5%; }  /* SIM Number */
-        th:nth-child(5), td:nth-child(5) { width: 5%; }  /* IMEI */
-        th:nth-child(6), td:nth-child(6) { width: 4%; }  /* Plate */
-        th:nth-child(7), td:nth-child(7) { width: 4%; }  /* Installed On */
-        th:nth-child(8), td:nth-child(8) { width: 3%; }  /* Year Model */
-        th:nth-child(9), td:nth-child(9) { width: 5%; }  /* Company Manufacture */
-        th:nth-child(10), td:nth-child(10) { width: 4%; } /* Device Type */
-        th:nth-child(11), td:nth-child(11) { width: 3%; } /* Air */
-        th:nth-child(12), td:nth-child(12) { width: 4%; } /* Sensor Type */
-        th:nth-child(13), td:nth-child(13) { width: 3%; } /* Mechanic */
-        th:nth-child(14), td:nth-child(14) { width: 3%; } /* Tracking */
-        th:nth-child(15), td:nth-child(15) { width: 4%; } /* System Type */
-        th:nth-child(16), td:nth-child(16) { width: 3%; } /* Calibration */
-        th:nth-child(17), td:nth-child(17) { width: 3%; } /* Color */
-        th:nth-child(18), td:nth-child(18) { width: 3%; } /* CRM */
-        th:nth-child(19), td:nth-child(19) { width: 4%; } /* Subscription Type */
-        th:nth-child(20), td:nth-child(20) { width: 3%; } /* Technician */
-        th:nth-child(21), td:nth-child(21) { width: 4%; } /* Vehicle Serial */
-        th:nth-child(22), td:nth-child(22) { width: 3%; } /* Vehicle Weight */
-        th:nth-child(23), td:nth-child(23) { width: 3%; } /* User */
-        th:nth-child(24), td:nth-child(24) { width: 5%; } /* Notes */
+         /* remove fixed widths to allow full wrapping of long Arabic headers */
     </style>
 </head>
 <body>
@@ -183,13 +230,7 @@
                 @endif
                 <tr>
                     @foreach($row as $cell)
-                        <td class="arabic-text long-text" title="{{ $cell ?? '' }}">
-                            @if(strlen($cell ?? '') > 15)
-                                {{ substr($cell, 0, 15) }}...
-                            @else
-                                {{ $cell ?? '' }}
-                            @endif
-                        </td>
+                        <td class="arabic-text long-text">{{ $cell ?? '' }}</td>
                     @endforeach
                 </tr>
             @endforeach

@@ -21,6 +21,9 @@
     @media (min-width:640px){.buttons-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media (min-width:768px){.buttons-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media (min-width:1024px){.buttons-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+    /* Inline edit: make inputs wider so the table can scroll horizontally */
+    .inline-input{min-width: 200px}
+    .inline-input.sm{min-width: 120px}
     </style>
 @endonce
 
@@ -56,7 +59,7 @@
                             
                             {{-- Edit All button --}}
                             <button id="editAllBtn" 
-                                    onclick="openEditAllModal()"
+                                    onclick="enableInlineEditAll()"
                                     class="inline-flex items-center justify-center w-full px-6 py-3 font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl text-white"
                                     style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);"
                                     onmouseover="this.style.background='linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)'"
@@ -65,7 +68,7 @@
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                                 </svg>
-                                {{ __('messages.clients.edit_all') }}
+                                <span id="editAllBtnLabel">{{ __('messages.clients.edit_all') }}</span>
                             </button>
                         @endhasanyrole
                         <a href="{{ route('clients.export', [$client, 'format'=>'xlsx', 'template'=>'advanced']) }}" 
@@ -121,33 +124,30 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($rows as $index => $r)
-                                <tr class="hover:bg-gray-50 transition-colors duration-150" style="border-bottom: 1px solid #e5e7eb;">
+                                @foreach ($rows as $index => $r)
+                                <tr class="hover:bg-gray-50 transition-colors duration-150" style="border-bottom: 1px solid #e5e7eb;" data-row-id="{{ $clientSheetRows[$index]->id ?? '' }}">
                                     <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['no'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['package_type'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['sim_type'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['sim_number'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['imei'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['plate'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['installed_on'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['year_model'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['company_manufacture'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['device_type'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['air'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['sensor_type'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['mechanic'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['tracking'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['system_type'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['calibration'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['color'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['crm'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['subscription_type'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['technician'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['vehicle_serial'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['vehicle_serial_number'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['vehicle_weight'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;">{{ $r['user'] ?? '' }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;">{{ $r['notes'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="data_package_type">{{ $r['package_type'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="sim_type">{{ $r['sim_type'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="sim_number">{{ $r['sim_number'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="imei">{{ $r['imei'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="plate">{{ $r['plate'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="installed_on">{{ $r['installed_on'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="year_model">{{ $r['year_model'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="company_manufacture">{{ $r['company_manufacture'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="device_type">{{ $r['device_type'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="air">{{ $r['air'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="mechanic">{{ $r['mechanic'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="tracking">{{ $r['tracking'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="system_type">{{ $r['system_type'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="calibration">{{ $r['calibration'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="color">{{ $r['color'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="crm_integration">{{ $r['crm'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="technician">{{ $r['technician'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="vehicle_serial_number">{{ $r['vehicle_serial_number'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="vehicle_weight">{{ $r['vehicle_weight'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="user">{{ $r['user'] ?? '' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="notes">{{ $r['notes'] ?? '' }}</td>
                                     @hasanyrole('Super Admin|Admin')
                                         <td class="px-3 py-2 text-center whitespace-nowrap">
                                             @if(isset($clientSheetRows[$index]))
@@ -329,65 +329,83 @@
         }
     };
 
-    function openEditAllModal() {
-        console.log('openEditAllModal called');
-        
-        const modal = document.getElementById('clientSheetRowModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalContent = document.getElementById('modalContent');
-        
-        console.log('Modal elements:', { modal, modalTitle, modalContent });
-        
-        if (!modal) {
-            console.error('Modal not found!');
-            return;
-        }
-        
-        modalTitle.textContent = '{{ __("messages.clients.edit_all") }}';
-        modalContent.innerHTML = '<div class="flex justify-center items-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>';
-        
-        modal.classList.add('show');
-        console.log('Modal shown');
-        
-        // Load edit all form content
-        const url = '{{ route("clients.sheet-rows.edit-all", $client) }}';
-        console.log('Fetching URL:', url);
-        
-        fetch(url)
-            .then(response => {
-                console.log('Response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+    // Inline edit-all (no modal)
+    function enableInlineEditAll(){
+        const rows = document.querySelectorAll('tbody tr[data-row-id]');
+        let idx = 0;
+        rows.forEach(tr => {
+            const rowId = tr.getAttribute('data-row-id');
+            if (!rowId) return;
+            tr.setAttribute('data-idx', String(idx));
+            tr.querySelectorAll('[data-key]').forEach(td => {
+                const key = td.getAttribute('data-key');
+                const value = td.textContent.trim();
+                td.innerHTML = '';
+                let input;
+                if (key === 'air' || key === 'mechanic') {
+                    // boolean select 0/1 to satisfy validation
+                    input = document.createElement('select');
+                    input.name = `rows[${idx}][${key}]`;
+                    input.className = 'w-full px-2 py-1 border border-gray-300 rounded inline-input sm';
+                    const optNo = document.createElement('option'); optNo.value = '0'; optNo.textContent = '{{ __('messages.common.no') }}';
+                    const optYes = document.createElement('option'); optYes.value = '1'; optYes.textContent = '{{ __('messages.common.yes') }}';
+                    input.appendChild(optNo); input.appendChild(optYes);
+                    const normalized = value.toLowerCase();
+                    const isYes = ['yes','1','true','{{ __('messages.common.yes') }}'].some(v => normalized.indexOf(v.toLowerCase()) !== -1);
+                    input.value = isYes ? '1' : '0';
+                } else {
+                    input = document.createElement('input');
+                    input.type = key === 'installed_on' ? 'date' : 'text';
+                    input.name = `rows[${idx}][${key}]`;
+                    input.value = value;
+                    input.className = 'w-full px-2 py-1 border border-gray-300 rounded inline-input';
                 }
-                return response.text();
-            })
-            .then(html => {
-                console.log('HTML received, length:', html.length);
-                modalContent.innerHTML = html;
-                
-                // Initialize after content is loaded
-                setTimeout(() => {
-                    const inputs = document.querySelectorAll('#modalContent input, #modalContent textarea, #modalContent select');
-                    inputs.forEach(input => {
-                        const key = input.name;
-                        window.editAllOriginalValues[key] = input.value;
-                        
-                        input.addEventListener('change', function() {
-                            window.updateEditAllModifiedCount();
-                        });
-                    });
-                    console.log('Edit All form initialized');
-                }, 100);
-            })
-            .catch(error => {
-                console.error('Error loading edit all form:', error);
-                modalContent.innerHTML = '<div class="text-red-600 text-center py-8">Error loading form: ' + error.message + '</div>';
+                td.appendChild(input);
             });
+            // hidden id input for this row (aligns with idx)
+            const hiddenId = document.createElement('input');
+            hiddenId.type = 'hidden';
+            hiddenId.name = `rows[${idx}][id]`;
+            hiddenId.value = rowId;
+            tr.appendChild(hiddenId);
+            idx++;
+        });
+
+        // Switch header button to Save All
+        const editBtnLabel = document.getElementById('editAllBtnLabel');
+        if (editBtnLabel) editBtnLabel.textContent = '{{ __('messages.common.save_all') }}';
+        const editBtn = document.getElementById('editAllBtn');
+        if (editBtn) {
+            editBtn.onclick = saveInlineAll;
+            editBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        }
     }
-    
-    // Make function globally accessible
-    window.openEditAllModal = openEditAllModal;
-    console.log('openEditAllModal function defined and attached to window');
+
+    async function saveInlineAll(){
+        const rows = document.querySelectorAll('tbody tr[data-idx]');
+        const formData = new FormData();
+        rows.forEach(tr => {
+            tr.querySelectorAll('input,select').forEach(inp => {
+                formData.append(inp.name, inp.value);
+            });
+        });
+        if ([...formData.keys()].length === 0) return;
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+        const btn = document.getElementById('editAllBtn');
+        if (btn) btn.disabled = true;
+        const res = await fetch('{{ route('clients.sheet-rows.update-all', $client) }}', {method:'POST', body: formData});
+        if (btn) btn.disabled = false;
+        if (res.ok){
+            window.showEditAllNotification('{{ __('messages.common.save_all') }} {{ __('messages.common.success') ?? 'done' }}','success');
+            setTimeout(() => window.location.reload(), 600);
+        } else {
+            window.showEditAllNotification('{{ __('messages.common.error_occurred') }}','error');
+        }
+    }
+
+    window.enableInlineEditAll = enableInlineEditAll;
+    window.saveInlineAll = saveInlineAll;
     </script>
 
 </x-app-layout>
