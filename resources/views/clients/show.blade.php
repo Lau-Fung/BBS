@@ -385,8 +385,13 @@
         const rows = document.querySelectorAll('tbody tr[data-idx]');
         const formData = new FormData();
         rows.forEach(tr => {
+            const idx = tr.getAttribute('data-idx');
+            const rowId = tr.getAttribute('data-row-id');
+            if (rowId) formData.append(`rows[${idx}][id]`, rowId);
             tr.querySelectorAll('input,select').forEach(inp => {
-                formData.append(inp.name, inp.value);
+                const m = inp.name.match(/\[(\w+)\]$/);
+                const field = m ? m[1] : inp.name;
+                formData.append(`rows[${idx}][${field}]`, inp.value);
             });
         });
         if ([...formData.keys()].length === 0) return;
