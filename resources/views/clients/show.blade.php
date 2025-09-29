@@ -394,7 +394,35 @@
 
         const btn = document.getElementById('editAllBtn');
         if (btn) btn.disabled = true;
-        const res = await fetch('{{ route('clients.sheet-rows.update-all', $client) }}', {method:'POST', body: formData});
+        // CSRF: required in production (419 otherwise). Send token header and include credentials for cookies.
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        formData.append('_token', token);
+        let res = await fetch('{{ route('clients.sheet-rows.update-all', $client) }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        });
+        // If a proxy/cookie quirk causes a 419, try to refresh the session and retry once
+        if (res.status === 419) {
+            try {
+                await fetch('/', {credentials:'include'}); // refresh session cookie
+            } catch (_) {}
+            res = await fetch('{{ route('clients.sheet-rows.update-all', $client) }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            });
+        }
         if (btn) btn.disabled = false;
         if (res.ok){
             window.showEditAllNotification('{{ __('messages.common.save_all') }} {{ __('messages.common.success') ?? 'done' }}','success');
