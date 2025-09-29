@@ -394,18 +394,7 @@
 
         const btn = document.getElementById('editAllBtn');
         if (btn) btn.disabled = true;
-        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        formData.append('_token', token);
-        const res = await fetch('{{ route('clients.sheet-rows.update-all', $client) }}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': token,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin'
-        });
+        const res = await fetch('{{ route('clients.sheet-rows.update-all', $client) }}', {method:'POST', body: formData});
         if (btn) btn.disabled = false;
         if (res.ok){
             window.showEditAllNotification('{{ __('messages.common.save_all') }} {{ __('messages.common.success') ?? 'done' }}','success');
