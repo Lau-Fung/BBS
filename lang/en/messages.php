@@ -59,6 +59,8 @@ return [
         'yes'        => 'Yes',
         'no'         => 'No',
         'select'     => 'Select',
+        'sort_by'    => 'Sort by',
+        'direction'  => 'Direction',
         'row_created' => 'Row created successfully.',
         'row_updated' => 'Row updated successfully.',
         'row_deleted' => 'Row deleted successfully.',
@@ -134,7 +136,8 @@ return [
         'empty'              => 'No devices found',
         'get_started'              => 'Get started by creating a new device.',
         'details'              => 'Device Details',
-        'active'                => 'Active'
+        'active'                => 'Active',
+        'type'                  => 'Device Type'
     ],
 
     'sims' => [
@@ -452,6 +455,7 @@ return [
         'filters_search_ph' => 'Search clients…',
         'filter' => 'Filter',
         'sector' => 'Sector',
+        'company' => 'Company',
         'vehicles' => 'Vehicles',
         'total_records' => 'Total Records',
         'devices_active' => 'Devices (active)',

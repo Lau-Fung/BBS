@@ -19,9 +19,14 @@ class ClientController extends Controller
 
     public function index(Request $request)
     {
-        [$clients, $q] = $this->buildSummary($request);
+        [$clients, $q, $filters, $sort] = $this->buildSummary($request);
 
-        return view('clients.index', compact('clients','q'));
+        return view('clients.index', [
+            'clients' => $clients,
+            'q'       => $q,
+            'filters' => $filters,
+            'sort'    => $sort,
+        ]);
     }
 
     /** ---------- Exports ---------- */
@@ -70,12 +75,49 @@ class ClientController extends Controller
     private function buildSummary(Request $request): array
     {
         $q = trim((string) $request->get('q', ''));
+        $filters = [
+            'sector'      => trim((string) $request->get('sector', '')),
+            'device_type' => trim((string) $request->get('device_type', '')),
+        ];
+        $sort = [
+            'by'  => in_array($request->get('sort'), ['name','sector','records']) ? $request->get('sort') : 'name',
+            'dir' => strtolower($request->get('dir')) === 'desc' ? 'desc' : 'asc',
+        ];
 
         $clients = Client::query()
-            ->when($q !== '', fn ($qq) => $qq->where('name', 'like', "%{$q}%"))
-            ->withCount('sheetRows')
-            ->orderBy('name')
-            ->get();
+            ->when($q !== '', function ($qq) use ($q) {
+                $qq->where(function ($w) use ($q) {
+                    $w->where('name', 'like', "%{$q}%")
+                      ->orWhere('sector', 'like', "%{$q}%")
+                      ->orWhereHas('sheetRows', function ($sr) use ($q) {
+                          $sr->where(function ($s) use ($q) {
+                              foreach ([
+                                  'sim_number','imei','plate','device_type','company_manufacture',
+                                  'tracking','system_type','calibration','color','crm_integration',
+                                  'subscription_type','technician','vehicle_serial_number','vehicle_weight','user','notes'
+                              ] as $col) {
+                                  $s->orWhere($col, 'like', "%{$q}%");
+                              }
+                          });
+                      });
+                });
+            })
+            ->when($filters['sector'] !== '', fn($qq) => $qq->where('sector', $filters['sector']))
+            ->when($filters['device_type'] !== '', function ($qq) use ($filters) {
+                $qq->whereHas('sheetRows', function ($sr) use ($filters) {
+                    $sr->where('device_type', $filters['device_type']);
+                });
+            })
+            ->withCount('sheetRows');
+
+        // sorting
+        if ($sort['by'] === 'records') {
+            $clients->orderBy('sheet_rows_count', $sort['dir']);
+        } else {
+            $clients->orderBy($sort['by'], $sort['dir']);
+        }
+
+        $clients = $clients->get();
 
         // Get device counts from client_sheet_rows table
         $deviceCounts = DB::table('client_sheet_rows')
@@ -100,15 +142,39 @@ class ClientController extends Controller
                 ->values();
         }
 
-        return [$clients, $q];
+        return [$clients, $q, $filters, $sort];
     }
 
     // DETAIL PAGE
-    public function show(Client $client)
+    public function show(Request $request, Client $client)
     {
+        // Filters and search within the client's rows
+        $q = trim((string) $request->get('q', ''));
+        $filters = [
+            'device_type' => trim((string) $request->get('device_type', '')),
+            'sim_type'    => trim((string) $request->get('sim_type', '')),
+        ];
+        $sort = [
+            'by'  => in_array($request->get('sort'), [
+                'id','installed_on','imei','plate','device_type','company_manufacture','year_model'
+            ]) ? $request->get('sort') : 'id',
+            'dir' => strtolower($request->get('dir')) === 'desc' ? 'desc' : 'asc',
+        ];
+
         // Get client sheet rows for display
         $clientSheetRows = $client->sheetRows()
-            ->orderBy('id')
+            ->when($q !== '', function ($qq) use ($q) {
+                $qq->where(function ($w) use ($q) {
+                    foreach ([
+                        'data_package_type','sim_type','sim_number','imei','plate','year_model','company_manufacture',
+                        'device_type','tracking','system_type','calibration','color','crm_integration',
+                        'technician','vehicle_serial_number','vehicle_weight','user','notes'
+                    ] as $col) { $w->orWhere($col, 'like', "%{$q}%"); }
+                });
+            })
+            ->when($filters['device_type'] !== '', fn($qq) => $qq->where('device_type', $filters['device_type']))
+            ->when($filters['sim_type'] !== '', fn($qq) => $qq->where('sim_type', $filters['sim_type']))
+            ->orderBy($sort['by'], $sort['dir'])
             ->get();
 
         // Create headers based on client_sheet_rows structure
@@ -166,7 +232,15 @@ class ClientController extends Controller
             ];
         });
 
-        return view('clients.show', compact('client', 'headers', 'rows', 'clientSheetRows'));
+        return view('clients.show', [
+            'client'          => $client,
+            'headers'         => $headers,
+            'rows'            => $rows,
+            'clientSheetRows' => $clientSheetRows,
+            'q'               => $q,
+            'filters'         => $filters,
+            'sort'            => $sort,
+        ]);
     }
 
     // EXPORT (XLSX/CSV/PDF)
