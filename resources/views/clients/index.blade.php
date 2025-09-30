@@ -9,15 +9,45 @@
             @media (min-width: 640px) { .client-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
             @media (min-width: 1024px) { .client-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
         </style>
-        <form method="get" class="mb-4 flex items-center gap-2">
-            <input name="q" value="{{ $q }}" placeholder="{{ __('messages.clients.filters_search_ph') }}"
-                   class="border border-gray-300 rounded-lg px-3 py-2 w-72 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <form method="get" class="mb-4 flex flex-wrap items-end gap-2">
+            <div>
+                <label class="text-xs text-gray-600">{{ __('messages.common.search') }}</label>
+                <input name="q" value="{{ $q }}" placeholder="{{ __('messages.clients.filters_search_ph') }}"
+                       class="border border-gray-300 rounded-lg px-3 py-2 w-72 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="text-xs text-gray-600">{{ __('messages.clients.sector') }}</label>
+                <input name="sector" value="{{ $filters['sector'] ?? '' }}" class="border border-gray-300 rounded-lg px-3 py-2 w-48 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+            </div>
+            <div>
+                <label class="text-xs text-gray-600">{{ __('messages.devices.type') ?? 'Device Type' }}</label>
+                <input name="device_type" value="{{ $filters['device_type'] ?? '' }}" class="border border-gray-300 rounded-lg px-3 py-2 w-56 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+            </div>
+            <div>
+                <label class="text-xs text-gray-600">{{ __('messages.common.sort_by') ?? 'Sort by' }}</label>
+                <select name="sort" class="border border-gray-300 rounded-lg  w-40 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="name" @selected(($sort['by'] ?? 'name')==='name')>{{ __('messages.clients.company') ?? 'Name' }}</option>
+                    <option value="sector" @selected(($sort['by'] ?? 'name')==='sector')>{{ __('messages.clients.sector') }}</option>
+                    <option value="records" @selected(($sort['by'] ?? 'name')==='records')>{{ __('messages.clients.total_records') }}</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs text-gray-600">{{ __('messages.common.direction') ?? 'Direction' }}</label>
+                <select name="dir" class="border border-gray-300 rounded-lg w-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="asc" @selected(($sort['dir'] ?? 'asc')==='asc')>ASC</option>
+                    <option value="desc" @selected(($sort['dir'] ?? 'asc')==='desc')>DESC</option>
+                </select>
+            </div>
             <button class="px-4 py-2 rounded-lg text-white font-medium transition-all duration-150"
                     style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
                     onmouseover="this.style.background='linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'"
                     onmouseout="this.style.background='linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'">
                 {{ __('messages.clients.filter') }}
             </button>
+            <a href="{{ route('clients.index') }}" class="px-4 py-2 rounded-lg text-white font-medium transition-all duration-150"
+               style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);"
+               onmouseover="this.style.background='linear-gradient(135deg, #4b5563 0%, #374151 100%)'"
+               onmouseout="this.style.background='linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'">{{ __('messages.common.reset') ?? 'Reset' }}</a>
         </form>
 
         <div class="client-actions">            

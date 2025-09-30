@@ -38,10 +38,50 @@
     <div class="py-6">
         <div class="max-w-12xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg p-6" style="border: 1px solid #e5e7eb;">
+                <form method="get" class="mb-4 flex flex-wrap items-end gap-2">
+                    <div>
+                        <label class="text-xs text-gray-600">{{ __('messages.common.search') }}</label>
+                        <input name="q" value="{{ $q ?? '' }}" placeholder="{{ __('messages.clients.filters_search_ph') }}"
+                               class="border border-gray-300 rounded-lg px-3 py-2 w-64 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-600">{{ __('messages.devices.type') ?? 'Device Type' }}</label>
+                        <input name="device_type" value="{{ $filters['device_type'] ?? '' }}" class="border border-gray-300 rounded-lg px-3 py-2 w-48 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-600">SIM</label>
+                        <input name="sim_type" value="{{ $filters['sim_type'] ?? '' }}" class="border border-gray-300 rounded-lg px-3 py-2 w-40 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-600">{{ __('messages.common.sort_by') ?? 'Sort by' }}</label>
+                        <select name="sort" class="border border-gray-300 rounded-lg px-3 py-2 w-40 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            @foreach(['id','installed_on','imei','plate','device_type','company_manufacture','year_model'] as $col)
+                                <option value="{{ $col }}" @selected(($sort['by'] ?? 'id')===$col)>{{ strtoupper($col) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-600">{{ __('messages.common.direction') ?? 'Direction' }}</label>
+                        <select name="dir" class="border border-gray-300 rounded-lg px-3 py-2 w-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="asc" @selected(($sort['dir'] ?? 'asc')==='asc')>ASC</option>
+                            <option value="desc" @selected(($sort['dir'] ?? 'asc')==='desc')>DESC</option>
+                        </select>
+                    </div>
+                    <button class="px-4 py-2 rounded-lg text-white font-medium transition-all duration-150"
+                            style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
+                            onmouseover="this.style.background='linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'"
+                            onmouseout="this.style.background='linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'">
+                        {{ __('messages.clients.filter') }}
+                    </button>
+                    <a href="{{ route('clients.show', $client) }}" class="px-4 py-2 rounded-lg text-white font-medium transition-all duration-150"
+                       style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);"
+                       onmouseover="this.style.background='linear-gradient(135deg, #4b5563 0%, #374151 100%)'"
+                       onmouseout="this.style.background='linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'">{{ __('messages.common.reset') ?? 'Reset' }}</a>
+                </form>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start mb-3">
                     <div class="w-full">
                         <div>{{ __('messages.clients.sector') }}: <strong>{{ $client->sector }}</strong></div>
-                        <div>{{ __('messages.clients.subscription') }}: <strong>{{ $client->subscription_type ?? 'yearly' }}</strong></div>
+                        
                     </div>
                     <div class="w-full buttons-grid">
                         {{-- New row (create client sheet row) --}}

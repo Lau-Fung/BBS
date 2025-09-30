@@ -58,6 +58,8 @@ return [
         'yes'        => 'نعم',
         'no'         => 'لا',
         'select'     => 'اختر',
+        'sort_by'    => 'ترتيب حسب',
+        'direction'  => 'الاتجاه',
         'row_created' => 'تم إنشاء الصف بنجاح.',
         'row_updated' => 'تم تحديث الصف بنجاح.',
         'row_deleted' => 'تم حذف الصف بنجاح.',
@@ -169,7 +171,8 @@ return [
         'empty'              => 'لم يتم العثور على أي أجهزة',
         'get_started'              => 'ابدأ بإنشاء جهاز جديد.',
         'details'              => 'تفاصيل الجهاز',
-        'active'                => 'نشيط'
+        'active'                => 'نشيط',
+        'type'                  => 'نوع الجهاز'
     ],
 
     'sims' => [
@@ -405,6 +408,7 @@ return [
         'filters_search_ph' => 'البحث عن العملاء…',
         'filter' => 'فلتر',
         'sector' => 'قطاع',
+        'company' => 'الشركة',
         'vehicles' => 'المركبات',
         'total_records' => 'إجمالي السجلات',
         'devices_active' => 'الأجهزة (النشطة)',
