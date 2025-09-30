@@ -38,23 +38,32 @@
     <div class="py-6">
         <div class="max-w-12xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg p-6" style="border: 1px solid #e5e7eb;">
-                <form method="get" class="mb-4 flex flex-wrap items-end gap-2">
+                <style>
+                    .filters-bar{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 6px 16px rgba(0,0,0,.05);padding:14px 16px;margin-bottom:16px}
+                    .filters-grid{display:grid;grid-template-columns:1fr;gap:12px}
+                    @media (min-width:640px){.filters-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+                    @media (min-width:1024px){.filters-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+                    .filters-bar label{display:block;font-size:12px;color:#6b7280;margin-bottom:6px}
+                    .filters-bar input,.filters-bar select{width:100%;border:1px solid #d1d5db;border-radius:10px;padding:8px 12px;outline:none}
+                    .filters-actions{display:flex;gap:8px;align-items:end}
+                </style>
+                <form method="get" class="filters-bar">
+                    <div class="filters-grid">
                     <div>
                         <label class="text-xs text-gray-600">{{ __('messages.common.search') }}</label>
-                        <input name="q" value="{{ $q ?? '' }}" placeholder="{{ __('messages.clients.filters_search_ph') }}"
-                               class="border border-gray-300 rounded-lg px-3 py-2 w-64 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <input name="q" value="{{ $q ?? '' }}" placeholder="{{ __('messages.clients.filters_search_ph') }}" class="">
                     </div>
                     <div>
                         <label class="text-xs text-gray-600">{{ __('messages.devices.type') ?? 'Device Type' }}</label>
-                        <input name="device_type" value="{{ $filters['device_type'] ?? '' }}" class="border border-gray-300 rounded-lg px-3 py-2 w-48 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+                        <input name="device_type" value="{{ $filters['device_type'] ?? '' }}" class=""/>
                     </div>
                     <div>
                         <label class="text-xs text-gray-600">SIM</label>
-                        <input name="sim_type" value="{{ $filters['sim_type'] ?? '' }}" class="border border-gray-300 rounded-lg px-3 py-2 w-40 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+                        <input name="sim_type" value="{{ $filters['sim_type'] ?? '' }}" class=""/>
                     </div>
                     <div>
                         <label class="text-xs text-gray-600">{{ __('messages.common.sort_by') ?? 'Sort by' }}</label>
-                        <select name="sort" class="border border-gray-300 rounded-lg px-3 py-2 w-40 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <select name="sort" class="">
                             @foreach(['id','installed_on','imei','plate','device_type','company_manufacture','year_model'] as $col)
                                 <option value="{{ $col }}" @selected(($sort['by'] ?? 'id')===$col)>{{ strtoupper($col) }}</option>
                             @endforeach
@@ -62,21 +71,24 @@
                     </div>
                     <div>
                         <label class="text-xs text-gray-600">{{ __('messages.common.direction') ?? 'Direction' }}</label>
-                        <select name="dir" class="border border-gray-300 rounded-lg px-3 py-2 w-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <select name="dir" class="">
                             <option value="asc" @selected(($sort['dir'] ?? 'asc')==='asc')>ASC</option>
                             <option value="desc" @selected(($sort['dir'] ?? 'asc')==='desc')>DESC</option>
                         </select>
                     </div>
-                    <button class="px-4 py-2 rounded-lg text-white font-medium transition-all duration-150"
-                            style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
-                            onmouseover="this.style.background='linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'"
-                            onmouseout="this.style.background='linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'">
-                        {{ __('messages.clients.filter') }}
-                    </button>
-                    <a href="{{ route('clients.show', $client) }}" class="px-4 py-2 rounded-lg text-white font-medium transition-all duration-150"
-                       style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);"
-                       onmouseover="this.style.background='linear-gradient(135deg, #4b5563 0%, #374151 100%)'"
-                       onmouseout="this.style.background='linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'">{{ __('messages.common.reset') ?? 'Reset' }}</a>
+                    </div>
+                    <div class="filters-actions mt-3">
+                        <button class="px-4 py-2 rounded-lg text-white font-medium transition-all duration-150"
+                                style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
+                                onmouseover="this.style.background='linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'"
+                                onmouseout="this.style.background='linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'">
+                            {{ __('messages.clients.filter') }}
+                        </button>
+                        <a href="{{ route('clients.show', $client) }}" class="px-4 py-2 rounded-lg text-white font-medium transition-all duration-150"
+                           style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);"
+                           onmouseover="this.style.background='linear-gradient(135deg, #4b5563 0%, #374151 100%)'"
+                           onmouseout="this.style.background='linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'">{{ __('messages.common.reset') ?? 'Reset' }}</a>
+                    </div>
                 </form>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start mb-3">
                     <div class="w-full">
