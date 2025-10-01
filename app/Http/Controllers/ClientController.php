@@ -75,10 +75,8 @@ class ClientController extends Controller
     private function buildSummary(Request $request): array
     {
         $q = trim((string) $request->get('q', ''));
-        $filters = [
-            'sector'      => trim((string) $request->get('sector', '')),
-            'device_type' => trim((string) $request->get('device_type', '')),
-        ];
+        // Sector and device_type filters removed; use a single global search
+        $filters = [];
         $sort = [
             'by'  => in_array($request->get('sort'), ['name','sector','records']) ? $request->get('sort') : 'name',
             'dir' => strtolower($request->get('dir')) === 'desc' ? 'desc' : 'asc',
@@ -94,18 +92,12 @@ class ClientController extends Controller
                               foreach ([
                                   'sim_number','imei','plate','device_type','company_manufacture',
                                   'tracking','system_type','calibration','color','crm_integration',
-                                  'subscription_type','technician','vehicle_serial_number','vehicle_weight','user','notes'
+                                  'technician','vehicle_serial_number','vehicle_weight','user','notes'
                               ] as $col) {
                                   $s->orWhere($col, 'like', "%{$q}%");
                               }
                           });
                       });
-                });
-            })
-            ->when($filters['sector'] !== '', fn($qq) => $qq->where('sector', $filters['sector']))
-            ->when($filters['device_type'] !== '', function ($qq) use ($filters) {
-                $qq->whereHas('sheetRows', function ($sr) use ($filters) {
-                    $sr->where('device_type', $filters['device_type']);
                 });
             })
             ->withCount('sheetRows');

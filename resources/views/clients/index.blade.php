@@ -11,8 +11,8 @@
             /* Filters card */
             .filters-bar{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 6px 16px rgba(0,0,0,.05);padding:14px 16px;margin-bottom:16px}
             .filters-grid{display:grid;grid-template-columns:1fr;gap:12px}
-            @media (min-width:640px){.filters-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-            @media (min-width:1024px){.filters-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+            @media (min-width:640px){.filters-grid{grid-template-columns:repeat(1,minmax(0,1fr))}}
+            @media (min-width:1024px){.filters-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
             .filters-bar label{display:block;font-size:12px;color:#6b7280;margin-bottom:6px}
             .filters-bar input,.filters-bar select{width:100%;border:1px solid #d1d5db;border-radius:10px;padding:8px 12px;outline:none}
             .filters-actions{display:flex;gap:8px;align-items:end;justify-content:flex-end}
@@ -25,14 +25,7 @@
                 <input name="q" value="{{ $q }}" placeholder="{{ __('messages.clients.filters_search_ph') }}"
                        class="">
             </div>
-            <div>
-                <label class="text-xs text-gray-600">{{ __('messages.clients.sector') }}</label>
-                <input name="sector" value="{{ $filters['sector'] ?? '' }}" class=""/>
-            </div>
-            <div>
-                <label class="text-xs text-gray-600">{{ __('messages.devices.type') ?? 'Device Type' }}</label>
-                <input name="device_type" value="{{ $filters['device_type'] ?? '' }}" class=""/>
-            </div>
+            {{-- Removed sector and device_type filters to keep a single global search --}}
             {{-- Removed Sort/Direction selects; sorting happens on table headers below --}}
             </div>
             <div class="filters-actions mt-3">
