@@ -45,7 +45,9 @@
                     @media (min-width:1024px){.filters-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
                     .filters-bar label{display:block;font-size:12px;color:#6b7280;margin-bottom:6px}
                     .filters-bar input,.filters-bar select{width:100%;border:1px solid #d1d5db;border-radius:10px;padding:8px 12px;outline:none}
-                    .filters-actions{display:flex;gap:8px;align-items:end}
+                    .filters-actions{display:flex;gap:8px;align-items:end;justify-content:flex-end}
+                    /* On lg screens place actions in the right half of the grid */
+                    @media (min-width:1024px){.filters-actions{grid-column:4 / 7}}
                 </style>
                 <form method="get" class="filters-bar">
                     <div class="filters-grid">
@@ -61,22 +63,7 @@
                         <label class="text-xs text-gray-600">SIM</label>
                         <input name="sim_type" value="{{ $filters['sim_type'] ?? '' }}" class=""/>
                     </div>
-                    <div>
-                        <label class="text-xs text-gray-600">{{ __('messages.common.sort_by') ?? 'Sort by' }}</label>
-                        <select name="sort" class="">
-                            @foreach(['id','installed_on','imei','plate','device_type','company_manufacture','year_model'] as $col)
-                                <option value="{{ $col }}" @selected(($sort['by'] ?? 'id')===$col)>{{ strtoupper($col) }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-600">{{ __('messages.common.direction') ?? 'Direction' }}</label>
-                        <select name="dir" class="">
-                            <option value="asc" @selected(($sort['dir'] ?? 'asc')==='asc')>ASC</option>
-                            <option value="desc" @selected(($sort['dir'] ?? 'asc')==='desc')>DESC</option>
-                        </select>
-                    </div>
-                    </div>
+                    {{-- Removed global Sort/Direction controls; sorting is now per-column in table headers --}}
                     <div class="filters-actions mt-3">
                         <button class="px-4 py-2 rounded-lg text-white font-medium transition-all duration-150"
                                 style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
@@ -88,6 +75,7 @@
                            style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);"
                            onmouseover="this.style.background='linear-gradient(135deg, #4b5563 0%, #374151 100%)'"
                            onmouseout="this.style.background='linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'">{{ __('messages.common.reset') ?? 'Reset' }}</a>
+                    </div>
                     </div>
                 </form>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start mb-3">
@@ -167,8 +155,36 @@
                     <table class="min-w-full text-sm" style="border-collapse: separate; border-spacing: 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
                         <thead style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
                             <tr>
-                                @foreach ($headers as $h)
-                                    <th class="px-3 py-3 text-right align-bottom whitespace-nowrap font-semibold text-gray-700" style="border-bottom: 2px solid #3b82f6; border-right: 1px solid #e5e7eb;">{{ $h }}</th>
+                                @foreach ($headers as $i => $h)
+                                    @php
+                                        $col = $columns[$i] ?? null;
+                                        $isSortable = !is_null($col);
+                                        $isActive = $isSortable && ($sort['by'] ?? '') === $col;
+                                        $nextDir = $isActive && ($sort['dir'] ?? 'asc') === 'asc' ? 'desc' : 'asc';
+                                        $query = array_merge(request()->except(['page']), ['sort' => $col, 'dir' => $nextDir]);
+                                    @endphp
+                                    <th class="px-3 py-3 text-right align-bottom whitespace-nowrap font-semibold text-gray-700" style="border-bottom: 2px solid #3b82f6; border-right: 1px solid #e5e7eb;">
+                                        @if($isSortable)
+                                            <a href="{{ route('clients.show', [$client] + $query) }}" class="inline-flex items-center gap-1 text-gray-700 hover:text-blue-700">
+                                                <span>{{ $h }}</span>
+                                                @if($isActive)
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                                        @if(($sort['dir'] ?? 'asc') === 'asc')
+                                                            <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 01-1.414 0L10 9l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                                                        @else
+                                                            <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                        @endif
+                                                    </svg>
+                                                @else
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 opacity-40" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M5 8h10l-5-5-5 5zm0 4h10l-5 5-5-5z" clip-rule="evenodd" />
+                                                    </svg>
+                                                @endif
+                                            </a>
+                                        @else
+                                            {{ $h }}
+                                        @endif
+                                    </th>
                                 @endforeach
                                 @hasanyrole('Super Admin|Admin')
                                     <th class="px-3 py-3 text-center align-bottom whitespace-nowrap font-semibold text-gray-700" style="border-bottom: 2px solid #3b82f6;">{{ __('messages.common.actions') }}</th>

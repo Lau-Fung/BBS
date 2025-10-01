@@ -135,8 +135,9 @@ class ClientController extends Controller
             ->pluck('total', 'client_id');
 
         foreach ($clients as $c) {
-            $c->total_devices = (int) ($totalDevices[$c->id] ?? 0);
-            $c->vehicles_count = $c->sheet_rows_count; // Use sheet rows count as vehicles count
+            $c->setAttribute('total_devices', (int) ($totalDevices[$c->id] ?? 0));
+            // Use sheet rows count as vehicles count
+            $c->setAttribute('vehicles_count', $c->sheet_rows_count);
             $c->models = collect($deviceCounts[$c->id] ?? [])
                 ->map(fn($row) => ['model' => $row->device_type, 'count' => (int) $row->count])
                 ->values();
@@ -154,10 +155,14 @@ class ClientController extends Controller
             'device_type' => trim((string) $request->get('device_type', '')),
             'sim_type'    => trim((string) $request->get('sim_type', '')),
         ];
+        // Allow sorting by any meaningful client_sheet_rows column
+        $sortable = [
+            'id','installed_on','imei','plate','device_type','company_manufacture','year_model',
+            'data_package_type','sim_type','sim_number','tracking','system_type','calibration','color',
+            'crm_integration','technician','vehicle_serial_number','vehicle_weight','user','notes','air','mechanic'
+        ];
         $sort = [
-            'by'  => in_array($request->get('sort'), [
-                'id','installed_on','imei','plate','device_type','company_manufacture','year_model'
-            ]) ? $request->get('sort') : 'id',
+            'by'  => in_array($request->get('sort'), $sortable, true) ? $request->get('sort') : 'id',
             'dir' => strtolower($request->get('dir')) === 'desc' ? 'desc' : 'asc',
         ];
 
@@ -177,30 +182,54 @@ class ClientController extends Controller
             ->orderBy($sort['by'], $sort['dir'])
             ->get();
 
-        // Create headers based on client_sheet_rows structure
+        // Create headers and matching sortable columns (null means not sortable)
         $headers = [
-            'العدد', // Count/Number
-            'نوع الباقة', // Package Type
-            'نوع الشريحة', // SIM Type
-            'رقم الشريحة', // SIM Number
+            'العدد',
+            'نوع الباقة',
+            'نوع الشريحة',
+            'رقم الشريحة',
             'IMEI',
-            'رقم اللوحة', // Plate
-            'تاريخ التركيب', // Installation Date
-            'موديل المركبة', // Year Model
-            'اسم الشركة المصنعة للمركبة', // Company Manufacture
-            'نوع الجهاز', // Device Type
-            'منافيخ', // Air
-            'سست', // Mechanic
-            'تتبع', // Tracking
-            'نظام التتبع', // System Type
-            'المعايرة', // Calibration
-            'لون المركبة', // Vehicle Color
-            'رقم الطلبcrm', // CRM Integration
-            'الفني', // Technician
-            'الرقم التسلسلي للسيارة', // Vehicle Serial Number
-            'وزن المركبة', // Vehicle Weight
-            'USER', // User
-            'ملاحظات', // Notes
+            'رقم اللوحة',
+            'تاريخ التركيب',
+            'موديل المركبة',
+            'اسم الشركة المصنعة للمركبة',
+            'نوع الجهاز',
+            'منافيخ',
+            'سست',
+            'تتبع',
+            'نظام التتبع',
+            'المعايرة',
+            'لون المركبة',
+            'رقم الطلبcrm',
+            'الفني',
+            'الرقم التسلسلي للسيارة',
+            'وزن المركبة',
+            'USER',
+            'ملاحظات',
+        ];
+        $columns = [
+            null, // العدد
+            'data_package_type',
+            'sim_type',
+            'sim_number',
+            'imei',
+            'plate',
+            'installed_on',
+            'year_model',
+            'company_manufacture',
+            'device_type',
+            'air',
+            'mechanic',
+            'tracking',
+            'system_type',
+            'calibration',
+            'color',
+            'crm_integration',
+            'technician',
+            'vehicle_serial_number',
+            'vehicle_weight',
+            'user',
+            'notes',
         ];
 
         // Convert client sheet rows to display format
@@ -235,6 +264,7 @@ class ClientController extends Controller
         return view('clients.show', [
             'client'          => $client,
             'headers'         => $headers,
+            'columns'         => $columns,
             'rows'            => $rows,
             'clientSheetRows' => $clientSheetRows,
             'q'               => $q,
