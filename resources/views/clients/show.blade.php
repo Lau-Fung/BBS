@@ -48,6 +48,13 @@
                     .filters-actions{display:flex;gap:8px;align-items:end;justify-content:flex-end}
                     /* On lg screens place actions in the right half of the grid */
                     @media (min-width:1024px){.filters-actions{grid-column:4 / 7}}
+                    /* Keep table cells on a single line and allow horizontal scroll */
+                    .table-nowrap td{white-space:nowrap}
+                    /* Widen specific columns that were wrapping */
+                    td[data-key="plate"],
+                    td[data-key="installed_on"],
+                    td[data-key="company_manufacture"]{min-width:160px}
+                    td[data-key="imei"], td[data-key="sim_number"]{min-width:180px}
                 </style>
                 <form method="get" class="filters-bar">
                     <div class="filters-grid">
@@ -152,7 +159,7 @@
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm" style="border-collapse: separate; border-spacing: 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                    <table class="min-w-full text-sm table-nowrap" style="border-collapse: separate; border-spacing: 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
                         <thead style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
                             <tr>
                                 @foreach ($headers as $i => $h)
