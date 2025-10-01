@@ -15,7 +15,8 @@
             @media (min-width:1024px){.filters-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
             .filters-bar label{display:block;font-size:12px;color:#6b7280;margin-bottom:6px}
             .filters-bar input,.filters-bar select{width:100%;border:1px solid #d1d5db;border-radius:10px;padding:8px 12px;outline:none}
-            .filters-actions{display:flex;gap:8px;align-items:end}
+            .filters-actions{display:flex;gap:8px;align-items:end;justify-content:flex-end}
+            @media (min-width:1024px){.filters-actions{grid-column:3 / 6}}
         </style>
         <form method="get" class="filters-bar">
             <div class="filters-grid">
@@ -32,21 +33,7 @@
                 <label class="text-xs text-gray-600">{{ __('messages.devices.type') ?? 'Device Type' }}</label>
                 <input name="device_type" value="{{ $filters['device_type'] ?? '' }}" class=""/>
             </div>
-            <div>
-                <label class="text-xs text-gray-600">{{ __('messages.common.sort_by') ?? 'Sort by' }}</label>
-                <select name="sort" class="">
-                    <option value="name" @selected(($sort['by'] ?? 'name')==='name')>{{ __('messages.clients.company') ?? 'Name' }}</option>
-                    <option value="sector" @selected(($sort['by'] ?? 'name')==='sector')>{{ __('messages.clients.sector') }}</option>
-                    <option value="records" @selected(($sort['by'] ?? 'name')==='records')>{{ __('messages.clients.total_records') }}</option>
-                </select>
-            </div>
-            <div>
-                <label class="text-xs text-gray-600">{{ __('messages.common.direction') ?? 'Direction' }}</label>
-                <select name="dir" class="">
-                    <option value="asc" @selected(($sort['dir'] ?? 'asc')==='asc')>ASC</option>
-                    <option value="desc" @selected(($sort['dir'] ?? 'asc')==='desc')>DESC</option>
-                </select>
-            </div>
+            {{-- Removed Sort/Direction selects; sorting happens on table headers below --}}
             </div>
             <div class="filters-actions mt-3">
                 <button class="px-4 py-2 rounded-lg text-white font-medium transition-all duration-150"
@@ -133,44 +120,68 @@
 
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            @forelse($clients as $c)
-                <div class="rounded border bg-white p-4 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <a href="{{ route('clients.show',$c) }}"
-                           class="text-lg font-semibold text-indigo-700 hover:underline">
-                            {{ $c->name }}
-                        </a>
-                        <span class="text-sm px-2 py-1 rounded bg-gray-100">
-                            {{ ucfirst($c->subscription_type) }}
-                        </span>
-                    </div>
+        @php
+            $headers = [
+                __('messages.clients.company') ?? 'Company',
+                __('messages.clients.sector'),
+                __('messages.clients.total_records'),
+                __('messages.clients.devices_active'),
+            ];
+            $columns = ['name','sector','records', null]; // last column not sortable
+            $currentBy = $sort['by'] ?? 'name';
+            $currentDir = $sort['dir'] ?? 'asc';
+        @endphp
 
-                    <div class="mt-2 text-sm text-gray-600">
-                        <div>{{ __('messages.clients.sector') }}: <strong>{{ $c->sector ?? '—' }}</strong></div>
-                        <div>{{ __('messages.clients.total_records') }}: <strong>{{ $c->vehicles_count }}</strong></div>
-                        <div>{{ __('messages.clients.devices_active') }}: <strong>{{ $c->total_devices }}</strong></div>
-                    </div>
-
-                    @if($c->models->isNotEmpty())
-                        <div class="mt-3">
-                            <div class="text-xs font-semibold text-gray-500 mb-1">{{ __('messages.clients.devices_by_model') }}</div>
-                            <table class="text-sm border w-full">
-                                <tbody class="divide-y">
-                                @foreach($c->models as $m)
-                                    <tr>
-                                        <td class="px-2 py-1">{{ $m['model'] }}</td>
-                                        <td class="px-2 py-1 text-right">{{ $m['count'] }}</td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
-                </div>
-            @empty
-                <div class="text-gray-600">{{ __('messages.clients.no_client_found') }}</div>
-            @endforelse
+        <div class="overflow-x-auto mt-4">
+            <table class="w-100 min-w-full text-sm" style="border-collapse: separate; border-spacing: 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                <thead style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                    <tr>
+                        @foreach($headers as $i => $h)
+                            @php
+                                $col = $columns[$i] ?? null;
+                                $isSortable = !is_null($col);
+                                $isActive = $isSortable && $currentBy === $col;
+                                $nextDir = $isActive && $currentDir === 'asc' ? 'desc' : 'asc';
+                                $query = array_merge(request()->except(['page']), ['sort'=>$col, 'dir'=>$nextDir]);
+                            @endphp
+                            <th class="px-4 py-3 text-right font-semibold text-gray-700" style="border-bottom: 2px solid #3b82f6; border-right: 1px solid #e5e7eb;">
+                                @if($isSortable)
+                                    <a href="{{ route('clients.index', $query) }}" class="inline-flex items-center gap-1 text-gray-700 hover:text-blue-700">
+                                        <span>{{ $h }}</span>
+                                        @if($isActive)
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                                @if($currentDir === 'asc')
+                                                    <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 01-1.414 0L10 9l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                                                @else
+                                                    <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                @endif
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 opacity-40" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M5 8h10l-5-5-5 5zm0 4h10l-5 5-5-5z" clip-rule="evenodd" />
+                                            </svg>
+                                        @endif
+                                    </a>
+                                @else
+                                    {{ $h }}
+                                @endif
+                            </th>
+                        @endforeach
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($clients as $c)
+                        <tr class="hover:bg-gray-50 transition-colors duration-150" style="border-bottom: 1px solid #e5e7eb;">
+                            <td class="px-4 py-2 text-indigo-700 font-semibold" style="border-right: 1px solid #e5e7eb;"><a href="{{ route('clients.show',$c) }}" class="hover:underline">{{ $c->name }}</a></td>
+                            <td class="px-4 py-2 text-gray-700" style="border-right: 1px solid #e5e7eb;">{{ $c->sector ?? '—' }}</td>
+                            <td class="px-4 py-2 text-gray-700" style="border-right: 1px solid #e5e7eb;">{{ $c->vehicles_count }}</td>
+                            <td class="px-4 py-2 text-gray-700">{{ $c->total_devices }}</td>
+                        </tr>
+                    @empty
+                        <tr><td class="px-4 py-3 text-gray-600" colspan="4">{{ __('messages.clients.no_client_found') }}</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </x-app-layout>
