@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Models\{Assignment, Device, Vehicle, Sim, Sensor};
 use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Cell\StringValueBinder;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,5 +37,11 @@ class AppServiceProvider extends ServiceProvider
             'sim'        => Sim::class,
             'sensor'     => Sensor::class,
         ]);
+
+        // Apply locale from session for Arabic/English switch
+        $locale = session('locale');
+        if (in_array($locale, ['ar','en'])) {
+            App::setLocale($locale);
+        }
     }
 }

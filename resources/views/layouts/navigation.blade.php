@@ -8,7 +8,7 @@
            onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'">
             <x-application-logo class="block h-12 me-3" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));" />
             <div class="d-flex flex-column">
-                <span class="text-white fw-bold fs-3" style="text-shadow: 0 2px 4px rgba(0,0,0,0.2); line-height: 1.1; letter-spacing: 0.5px;">ESTLUZ</span>
+                <span class="text-white fw-bold fs-3" style="text-shadow: 0 2px 4px rgba(0,0,0,0.2); line-height: 1.1; letter-spacing: 0.5px;">Alrakeen BBS</span>
                 <small class="text-white-50 fw-medium" style="font-size: 0.8rem; line-height: 1; letter-spacing: 0.3px;">Business Management System</small>
             </div>
         </a>

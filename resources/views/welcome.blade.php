@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Excel Management System</title>
+    <title>Alrakeen BBS</title>
 
     {{-- Bootstrap --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -29,7 +29,7 @@
 </head>
 <body>
     <div class="overlay">
-        <h1 class="display-4 fw-bold">{{ __('messages.excel_management_system') }}</h1>
+        <h1 class="display-4 fw-bold">Alrakeen BBS</h1>
         <p class="lead">{{ __('messages.welcome') }}</p>
 
         <div class="mt-4">
@@ -42,11 +42,7 @@
                     <a href="{{ route('login') }}" class="btn btn-primary btn-lg me-2">
                         <i class="bi bi-box-arrow-in-right"></i> {{ __('messages.auth.login') }}
                     </a>
-                    @if (Route::has('register'))
-                        <a href="{{ route('register') }}" class="btn btn-outline-light btn-lg">
-                            <i class="bi bi-person-plus"></i> {{ __('messages.auth.register') }}
-                        </a>
-                    @endif
+                    {{-- Registration disabled intentionally --}}
                 @endauth
             @endif
         </div>
