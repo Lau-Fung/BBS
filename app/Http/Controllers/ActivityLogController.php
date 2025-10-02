@@ -31,7 +31,8 @@ class ActivityLogController extends Controller
             'search'
         ]);
 
-        $activities = ActivityLogService::getActivityLogs($filters, 20);
+        // Load all activities for client-side DataTables processing
+        $activities = ActivityLogService::getActivityLogs($filters, 1000);
         $stats = ActivityLogService::getActivityStats(30);
 
         return view('activity-logs.index', compact('activities', 'stats', 'filters'));
