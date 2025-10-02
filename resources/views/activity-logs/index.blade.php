@@ -292,11 +292,33 @@
 
     
 </x-app-layout>
-<script>
-    $(document).ready(function() {
-        $('#activityLogsTable').DataTable({
-            scrollX: true,   // if table is wide
-            autoWidth: false
-        });
-    });
-</script>
+ <script>
+     $(document).ready(function() {
+         $('#activityLogsTable').DataTable({
+             scrollX: true,
+             autoWidth: false,
+             pageLength: 10,
+             lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+             order: [[4, 'desc']], // Sort by date desc by default
+             columnDefs: [
+                 { orderable: false, targets: [5] } // Disable sorting on actions column
+             ],
+             language: {
+                 processing: "{{ __('messages.activity_logs.processing') }}",
+                 lengthMenu: "{{ __('messages.activity_logs.show_entries') }}",
+                 zeroRecords: "{{ __('messages.activity_logs.no_activities') }}",
+                 info: "{{ __('messages.activity_logs.showing_entries') }}",
+                 infoEmpty: "{{ __('messages.activity_logs.showing_entries') }}",
+                 infoFiltered: "{{ __('messages.activity_logs.filtered_entries') }}",
+                 search: "{{ __('messages.activity_logs.search') }}",
+                 paginate: {
+                     first: "{{ __('messages.activity_logs.first') }}",
+                     last: "{{ __('messages.activity_logs.last') }}",
+                     next: "{{ __('messages.activity_logs.next') }}",
+                     previous: "{{ __('messages.activity_logs.previous') }}"
+                 }
+             },
+             dom: 'lfrtip'
+         });
+     });
+ </script>
