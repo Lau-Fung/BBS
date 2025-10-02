@@ -15,28 +15,38 @@ class RolesAndPermissionsSeeder extends Seeder
         // clear cached roles & permissions
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
-        // ---- Permissions (add what your policies/controllers check) ----
+        // ---- Permissions (central list used by roles) ----
         $perms = [
-            // Users
-            'users.view',          // list users
-            'users.manage',        // create/update/delete + assign roles
-            // Assignments (used by AssignmentPolicy)
+            // Users & admin
+            'users.view',
+            'users.manage',                 // create/update/delete + assign roles
+            'users.assign-roles',
+            'admin.reference.manage',       // carriers and reference data
+            'activity_logs.view',
+
+            // Clients
+            'clients.view',
+            'clients.create',
+            'clients.update',
+            'clients.delete',
+            'clients.export',
+
+            // Assignments (also used by import/upload/export routes)
             'assignments.view',
-            'assignments.create',
-            'assignments.update',
+            'assignments.create',           // add / upload
+            'assignments.update',           // edit
             'assignments.delete',
             'assignments.restore',
+            'assignments.export',
 
-            // You can keep your user/record perms too if you use them elsewhere
-            'users.view',
-            'users.assign-roles',
+            // Records (generic data records)
             'records.view',
             'records.create',
             'records.update',
             'records.delete',
 
-            'clients.view', 
-            'clients.export'
+            // Manager-only special: allow granting edit to data entry (hook for UI)
+            'grant.edit.permission',
         ];
 
         foreach ($perms as $p) {
@@ -50,19 +60,35 @@ class RolesAndPermissionsSeeder extends Seeder
         $viewer  = Role::firstOrCreate(['name' => 'Viewer',     'guard_name' => 'web']);
 
         // ---- Map permissions to roles ----
+        // Admin: FULL access (including delete on clients/data)
         $admin->syncPermissions($perms);
 
+        // Manager: add, upload, view, edit, and can grant edit permission to Data Entry (no deletes)
         $manager->syncPermissions([
-            'assignments.view','assignments.create','assignments.update',
-            'records.view','records.create','records.update','clients.view', 'clients.export', 'users.view'
+            'users.view',
+            'activity_logs.view',
+            'admin.reference.manage',
+            'clients.view','clients.create','clients.update','clients.export',
+            'assignments.view','assignments.create','assignments.update','assignments.export',
+            'records.view','records.create','records.update',
+            'grant.edit.permission',
         ]);
 
+        // Data Entry: add, upload and view only (no edit/delete)
         $entry->syncPermissions([
-            'assignments.view','assignments.create','assignments.update',
-            'records.view','records.create','records.update','users.view'
+            'users.view',
+            'clients.view','clients.create',
+            'assignments.view','assignments.create',
+            'records.view','records.create',
         ]);
 
-        $viewer->syncPermissions(['assignments.view','records.view']);
+        // Viewer: view only + export; cannot upload
+        $viewer->syncPermissions([
+            'clients.view','clients.export',
+            'assignments.view','assignments.export',
+            'records.view',
+            'activity_logs.view',
+        ]);
 
         // ---- Bootstrap first admin user ----
         $user = User::firstOrCreate(

@@ -109,7 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Import / Export (permission-based)
     Route::get ('/imports/assignments',         [ImportAssignmentsController::class,'form'])
-        ->middleware('permission:assignments.view')
+        ->middleware('permission:assignments.create')
         ->name('imports.assignments.form');
 
     Route::post('/imports/assignments/preview', [ImportAssignmentsController::class,'preview'])
@@ -129,12 +129,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
     Route::delete('/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
 
-    // Clients
-    Route::get('/clients',                 [ClientController::class, 'index'])->name('clients.index');
-    Route::get('/clients/{client}',        [ClientController::class, 'show'])->name('clients.show');
-    Route::get('/clients/{client}/export', [ClientController::class, 'export'])->name('clients.export'); // ?format=xlsx|csv|pdf
-    Route::get('/clients/export/xlsx', [ClientController::class,'exportXlsx'])->name('clients.export.xlsx');
-    Route::get('/clients/export/pdf',  [ClientController::class,'exportPdf'])->name('clients.export.pdf');
+    // Clients (permission-scoped)
+    Route::get('/clients',                 [ClientController::class, 'index'])
+        ->middleware('permission:clients.view')->name('clients.index');
+    Route::get('/clients/{client}',        [ClientController::class, 'show'])
+        ->middleware('permission:clients.view')->name('clients.show');
+    Route::get('/clients/{client}/export', [ClientController::class, 'export'])
+        ->middleware('permission:clients.export')->name('clients.export'); // ?format=xlsx|csv|pdf
+    Route::get('/clients/export/xlsx', [ClientController::class,'exportXlsx'])
+        ->middleware('permission:clients.export')->name('clients.export.xlsx');
+    Route::get('/clients/export/pdf',  [ClientController::class,'exportPdf'])
+        ->middleware('permission:clients.export')->name('clients.export.pdf');
     Route::get('/clients/{client}/assignments/create', [ClientController::class, 'createAssignment'])->name('clients.assignments.create');
     
     // Client Sheet Rows (for direct data entry)
