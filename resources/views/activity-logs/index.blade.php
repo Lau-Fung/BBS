@@ -209,183 +209,94 @@
                 </div>
             </div>
 
-            <!-- Activity Logs Table -->
-            <div class="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
-                <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800">{{ __('messages.activity_logs.recent_activities') }}</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 w-100">
-                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('messages.activity_logs.user_col') }}</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('messages.activity_logs.event_col') }}</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('messages.activity_logs.subject_col') }}</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('messages.activity_logs.description_col') }}</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('messages.activity_logs.date_col') }}</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ __('messages.activity_logs.actions_col') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-100">
-                                @forelse($activities as $activity)
-                                    <tr class="hover:bg-gray-50 transition-colors duration-150">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            <div class="flex items-center">
-                                                <div class="flex-shrink-0 h-8 w-8">
-                                                    <div class="h-8 w-8 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center">
-                                                        <span class="text-xs font-bold ">
-                                                            {{-- {{ substr($activity->causer->name ?? 'S', 0, 1) }} --}}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="ml-3">
-                                                    <div class="text-sm font-medium text-gray-900">{{ $activity->causer->name ?? __('messages.activity_logs.system') }}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full shadow-sm border"
-                                                @if($activity->event === 'created')
-                                                    style="background: linear-gradient(90deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; border-color: #86efac;"
-                                                @elseif($activity->event === 'updated')
-                                                    style="background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; border-color: #93c5fd;"
-                                                @elseif($activity->event === 'deleted')
-                                                    style="background: linear-gradient(90deg, #fecaca 0%, #fca5a5 100%); color: #991b1b; border-color: #f87171;"
-                                                @elseif($activity->event === 'login')
-                                                    style="background: linear-gradient(90deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; border-color: #6ee7b7;"
-                                                @elseif($activity->event === 'logout')
-                                                    style="background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%); color: #374151; border-color: #d1d5db;"
-                                                @elseif($activity->event === 'import')
-                                                    style="background: linear-gradient(90deg, #e9d5ff 0%, #ddd6fe 100%); color: #6b21a8; border-color: #c4b5fd;"
-                                                @elseif($activity->event === 'export')
-                                                    style="background: linear-gradient(90deg, #fed7aa 0%, #fdba74 100%); color: #9a3412; border-color: #fb923c;"
-                                                @elseif($activity->event === 'bulk_operation')
-                                                    style="background: linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 100%); color: #3730a3; border-color: #a5b4fc;"
-                                                @else
-                                                    style="background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%); color: #374151; border-color: #d1d5db;"
-                                                @endif>
-                                                {{ __('messages.activity_logs.' . $activity->event) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $activity->subject_type ? class_basename($activity->subject_type) : '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-900">
-                                            {{ $activity->description }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $activity->created_at->format('M d, Y H:i') }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="{{ route('activity-logs.show', $activity) }}" 
-                                               class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150"
-                                               style="background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);"
-                                               onmouseover="this.style.background='linear-gradient(90deg, #4f46e5 0%, #4338ca 100%)'"
-                                               onmouseout="this.style.background='linear-gradient(90deg, #6366f1 0%, #4f46e5 100%)'">
-                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
-                                                </svg>
-                                                {{ __('messages.activity_logs.view') }}
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
-                                            {{ __('messages.activity_logs.no_activities') }}
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- Pagination -->
-                    <div class="mt-6 flex items-center justify-between m-3">
-                        <div class="flex-1 flex justify-between sm:hidden">
-                            @if ($activities->onFirstPage())
-                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 cursor-not-allowed rounded-md">
-                                    {{ __('messages.activity_logs.previous') }}
-                                </span>
-                            @else
-                                <a href="{{ $activities->previousPageUrl() }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-150">
-                                    {{ __('messages.activity_logs.previous') }}
-                                </a>
-                            @endif
-
-                            @if ($activities->hasMorePages())
-                                <a href="{{ $activities->nextPageUrl() }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition-colors duration-150">
-                                    {{ __('messages.activity_logs.next') }}
-                                </a>
-                            @else
-                                <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 cursor-not-allowed rounded-md">
-                                    {{ __('messages.activity_logs.next') }}
-                                </span>
-                            @endif
-                        </div>
-                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                            <div>
-                                <p class="text-sm text-gray-700">
-                                    {{ __('messages.activity_logs.showing') }}
-                                    <span class="font-medium">{{ $activities->firstItem() }}</span>
-                                    {{ __('messages.activity_logs.to') }}
-                                    <span class="font-medium">{{ $activities->lastItem() }}</span>
-                                    {{ __('messages.activity_logs.of') }}
-                                    <span class="font-medium">{{ $activities->total() }}</span>
-                                    {{ __('messages.activity_logs.results') }}
-                                </p>
-                            </div>
-                            <div>
-                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                    {{-- Previous Page Link --}}
-                                    @if ($activities->onFirstPage())
-                                        <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-400 cursor-not-allowed">
-                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                            </svg>
-                                        </span>
-                                    @else
-                                        <a href="{{ $activities->previousPageUrl() }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors duration-150">
-                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                            </svg>
-                                        </a>
-                                    @endif
-
-                                    {{-- Pagination Elements --}}
-                                    @foreach ($activities->getUrlRange(1, $activities->lastPage()) as $page => $url)
-                                        @if ($page == $activities->currentPage())
-                                            <span class="relative inline-flex items-center px-4 py-2 border border-indigo-500 bg-indigo-50 text-sm font-medium text-indigo-600">
-                                                {{ $page }}
-                                            </span>
-                                        @else
-                                            <a href="{{ $url }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150">
-                                                {{ $page }}
-                                            </a>
-                                        @endif
-                                    @endforeach
-
-                                    {{-- Next Page Link --}}
-                                    @if ($activities->hasMorePages())
-                                        <a href="{{ $activities->nextPageUrl() }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors duration-150">
-                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                            </svg>
-                                        </a>
-                                    @else
-                                        <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-400 cursor-not-allowed">
-                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                            </svg>
-                                        </span>
-                                    @endif
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+             <!-- Activity Logs DataTable -->
+             <div class="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
+                 <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                     <h3 class="text-lg font-semibold text-gray-800">{{ __('messages.activity_logs.recent_activities') }}</h3>
+                 </div>
+                 <div class="p-6">
+                     <table id="activityLogsTable" class="table table-striped table-hover" style="width:100%">
+                         <thead>
+                             <tr>
+                                 <th>{{ __('messages.activity_logs.user_col') }}</th>
+                                 <th>{{ __('messages.activity_logs.event_col') }}</th>
+                                 <th>{{ __('messages.activity_logs.subject_col') }}</th>
+                                 <th>{{ __('messages.activity_logs.description_col') }}</th>
+                                 <th>{{ __('messages.activity_logs.date_col') }}</th>
+                                 <th>{{ __('messages.activity_logs.actions_col') }}</th>
+                             </tr>
+                         </thead>
+                         <tbody>
+                             @foreach($activities as $activity)
+                                 <tr>
+                                     <td>
+                                         <div class="flex items-center">
+                                             <div class="flex-shrink-0 h-8 w-8">
+                                                 <div class="h-8 w-8 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center">
+                                                     <span class="text-xs font-bold text-white">
+                                                         {{ substr($activity->causer->name ?? 'S', 0, 1) }}
+                                                     </span>
+                                                 </div>
+                                             </div>
+                                             <div class="ml-3">
+                                                 <div class="text-sm font-medium text-gray-900">{{ $activity->causer->name ?? __('messages.activity_logs.system') }}</div>
+                                             </div>
+                                         </div>
+                                     </td>
+                                     <td>
+                                         <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full shadow-sm border"
+                                             @if($activity->event === 'created')
+                                                 style="background: linear-gradient(90deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; border-color: #86efac;"
+                                             @elseif($activity->event === 'updated')
+                                                 style="background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; border-color: #93c5fd;"
+                                             @elseif($activity->event === 'deleted')
+                                                 style="background: linear-gradient(90deg, #fecaca 0%, #fca5a5 100%); color: #991b1b; border-color: #f87171;"
+                                             @elseif($activity->event === 'login')
+                                                 style="background: linear-gradient(90deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; border-color: #6ee7b7;"
+                                             @elseif($activity->event === 'logout')
+                                                 style="background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%); color: #374151; border-color: #d1d5db;"
+                                             @elseif($activity->event === 'import')
+                                                 style="background: linear-gradient(90deg, #e9d5ff 0%, #ddd6fe 100%); color: #6b21a8; border-color: #c4b5fd;"
+                                             @elseif($activity->event === 'export')
+                                                 style="background: linear-gradient(90deg, #fed7aa 0%, #fdba74 100%); color: #9a3412; border-color: #fb923c;"
+                                             @elseif($activity->event === 'bulk_operation')
+                                                 style="background: linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 100%); color: #3730a3; border-color: #a5b4fc;"
+                                             @else
+                                                 style="background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%); color: #374151; border-color: #d1d5db;"
+                                             @endif>
+                                             {{ __('messages.activity_logs.' . $activity->event) }}
+                                         </span>
+                                     </td>
+                                     <td>{{ $activity->subject_type ? class_basename($activity->subject_type) : '-' }}</td>
+                                     <td>{{ $activity->description }}</td>
+                                     <td>{{ $activity->created_at->format('M d, Y H:i') }}</td>
+                                     <td>
+                                         <a href="{{ route('activity-logs.show', $activity) }}" 
+                                            class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150"
+                                            style="background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);">
+                                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                 <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                                 <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                                             </svg>
+                                             {{ __('messages.activity_logs.view') }}
+                                         </a>
+                                     </td>
+                                 </tr>
+                             @endforeach
+                         </tbody>
+                     </table>
+                 </div>
+             </div>
         </div>
     </div>
+
+    
 </x-app-layout>
+<script>
+    $(document).ready(function() {
+        $('#activityLogsTable').DataTable({
+            scrollX: true,   // if table is wide
+            autoWidth: false
+        });
+    });
+</script>
