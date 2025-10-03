@@ -303,6 +303,15 @@ return [
         'verification_link_sent_desc'      => 'A new verification link has been sent to the email address you provided during registration.',
         'verify_email_desc'      => 'Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.',
     ],
+
+    'dashboard' => [
+        'clients_per_sector' => 'Clients per sector',
+        'devices_per_model' => 'Devices per model',
+        'sims_per_package' => 'SIMs per package',
+        'sims_per_provider' => 'SIMs per provider',
+        'expired_warranty' => 'Devices out of warranty',
+        'technician_totals' => 'Technician installations',
+    ],
     
     'profile' => [
         // Page
