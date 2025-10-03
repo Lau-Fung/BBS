@@ -552,5 +552,13 @@ return [
     ],
 
     'excel_management_system' => 'نظام إدارة إكسل',
+    'dashboard' => [
+        'clients_per_sector' => 'العملاء حسب القطاع',
+        'devices_per_model' => 'الأجهزة حسب الموديل',
+        'sims_per_package' => 'شرائح الاتصال حسب الباقة',
+        'sims_per_provider' => 'شرائح الاتصال حسب المزود',
+        'expired_warranty' => 'أجهزة انتهت كفالتها',
+        'technician_totals' => 'تركيبات الفنيين',
+    ],
     'welcome' => 'مرحبًا بكم في منصة بيانات الأعمال الذكية والآمنة الخاصة بكم'
 ];
