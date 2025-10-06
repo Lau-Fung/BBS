@@ -160,6 +160,9 @@
                                 @endif
                             </th>
                         @endforeach
+                        @can('clients.delete')
+                            <th class="px-4 py-3 text-center font-semibold text-gray-700" style="border-bottom: 2px solid #3b82f6;">{{ __('messages.common.actions') }}</th>
+                        @endcan
                     </tr>
                 </thead>
                 <tbody>
@@ -168,10 +171,21 @@
                             <td class="px-4 py-2 text-indigo-700 font-semibold" style="border-right: 1px solid #e5e7eb;"><a href="{{ route('clients.show',$c) }}" class="hover:underline">{{ $c->name }}</a></td>
                             <td class="px-4 py-2 text-gray-700" style="border-right: 1px solid #e5e7eb;">{{ $c->sector ?? '—' }}</td>
                             <td class="px-4 py-2 text-gray-700" style="border-right: 1px solid #e5e7eb;">{{ $c->vehicles_count }}</td>
-                            <td class="px-4 py-2 text-gray-700">{{ $c->total_devices }}</td>
+                            <td class="px-4 py-2 text-gray-700" style="border-right: 1px solid #e5e7eb;">{{ $c->total_devices }}</td>
+                            @can('clients.delete')
+                                <td class="px-4 py-2 text-center" style="border-right: 1px solid #e5e7eb;">
+                                    <form method="POST" action="{{ route('clients.destroy', $c) }}" class="inline" onsubmit="return confirm('{{ __('messages.clients.confirm_delete') }}')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-800 font-medium">
+                                            {{ __('messages.common.delete') }}
+                                        </button>
+                                    </form>
+                                </td>
+                            @endcan
                         </tr>
                     @empty
-                        <tr><td class="px-4 py-3 text-gray-600" colspan="4">{{ __('messages.clients.no_client_found') }}</td></tr>
+                        <tr><td class="px-4 py-3 text-gray-600" colspan="{{ auth()->user()->can('clients.delete') ? '5' : '4' }}">{{ __('messages.clients.no_client_found') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>

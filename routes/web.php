@@ -134,6 +134,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:clients.view')->name('clients.index');
     Route::get('/clients/{client}',        [ClientController::class, 'show'])
         ->middleware('permission:clients.view')->name('clients.show');
+    Route::delete('/clients/{client}',     [ClientController::class, 'destroy'])
+        ->middleware('permission:clients.delete')->name('clients.destroy');
     Route::get('/clients/{client}/export', [ClientController::class, 'export'])
         ->middleware('permission:clients.export')->name('clients.export'); // ?format=xlsx|csv|pdf
     Route::get('/clients/export/xlsx', [ClientController::class,'exportXlsx'])

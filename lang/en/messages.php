@@ -364,6 +364,8 @@ return [
         'use_recovery_code' => 'Use a recovery code',
         'qr_title' => 'Scan this QR code in Google Authenticator',
         'qr_help' => 'After scanning, enter the 6-digit code to confirm.',
+        'confirm_two_factor' => 'Confirm Two-Factor',
+        'confirm_two_factor_help' => 'Enter the 6-digit code from your authenticator app to finish enabling 2FA.',
         'fields_code' => 'Authentication Code',
         'recovery_code' => 'Recovery Codes',
         'recovery_codes_description' => 'Store these recovery codes in a safe place. Each code can only be used once.',
@@ -516,6 +518,9 @@ return [
         'user'               => 'User',
         'notes'              => 'Notes',
         'installed_on'       => 'Installed On',
+        'deleted_successfully' => 'Client deleted successfully',
+        'confirm_delete' => 'Are you sure you want to delete this client? This action cannot be undone.',
+        'confirm_delete_row' => 'Are you sure you want to delete this row? This action cannot be undone.',
     ],
 
     'records' => 'Records',

@@ -142,11 +142,19 @@ class ClientSheetRowController extends Controller
         
         $clientSheetRow->delete();
         
-        return response()->json([
-            'success' => true,
-            'message' => __('messages.common.row_deleted'),
-            'redirect' => route('clients.show', $client)
-        ]);
+        // Check if request expects JSON (AJAX)
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('messages.common.row_deleted'),
+                'redirect' => route('clients.show', $client)
+            ]);
+        }
+        
+        // Regular form submission
+        return redirect()
+            ->route('clients.show', $client)
+            ->with('success', __('messages.common.row_deleted'));
     }
 
     /**

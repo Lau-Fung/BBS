@@ -92,7 +92,7 @@
                     </div>
                     <div class="w-full buttons-grid">
                         {{-- New row (create client sheet row) --}}
-                        @hasanyrole('Super Admin|Admin')
+                        @can('assignments.create')
                             <button onclick="openModal('{{ __('messages.clients.new_row') }}', '{{ route('clients.sheet-rows.create', $client) }}')" 
                                     class="inline-flex items-center justify-center w-full px-6 py-3 font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl text-white"
                                     style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"
@@ -103,8 +103,10 @@
                                 </svg>
                                 {{ __('messages.clients.new_row') }}
                             </button>
-                            
-                            {{-- Edit All button --}}
+                        @endcan
+                        
+                        {{-- Edit All button --}}
+                        @can('assignments.update')
                             <button id="editAllBtn" 
                                     onclick="enableInlineEditAll()"
                                     class="inline-flex items-center justify-center w-full px-6 py-3 font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl text-white"
@@ -117,7 +119,7 @@
                                 </svg>
                                 <span id="editAllBtnLabel">{{ __('messages.clients.edit_all') }}</span>
                             </button>
-                        @endhasanyrole
+                        @endcan
                         <a href="{{ route('clients.export', [$client, 'format'=>'xlsx', 'template'=>'advanced']) }}" 
                         class="inline-flex items-center justify-center w-full px-6 py-3 font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl text-white"
                         style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
@@ -193,9 +195,10 @@
                                         @endif
                                     </th>
                                 @endforeach
-                                @hasanyrole('Super Admin|Admin')
-                                    <th class="px-3 py-3 text-center align-bottom whitespace-nowrap font-semibold text-gray-700" style="border-bottom: 2px solid #3b82f6;">{{ __('messages.common.actions') }}</th>
-                                @endhasanyrole
+                                @can('assignments.update')
+                                <th class="px-3 py-3 text-center align-bottom whitespace-nowrap font-semibold text-gray-700" style="border-bottom: 2px solid #3b82f6;">{{ __('messages.common.edit') }}</th>
+                                <th class="px-3 py-3 text-center align-bottom whitespace-nowrap font-semibold text-gray-700" style="border-bottom: 2px solid #f31f1f;">{{ __('messages.common.delete') }}</th>
+                                @endcan
                             </tr>
                         </thead>
                         <tbody>
@@ -223,11 +226,11 @@
                                     <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="vehicle_weight">{{ $r['vehicle_weight'] ?? '' }}</td>
                                     <td class="px-3 py-2 whitespace-nowrap text-gray-900" style="border-right: 1px solid #e5e7eb;" data-key="user">{{ $r['user'] ?? '' }}</td>
                                     <td class="px-3 py-2 whitespace-nowrap text-gray-600" style="border-right: 1px solid #e5e7eb;" data-key="notes">{{ $r['notes'] ?? '' }}</td>
-                                    @hasanyrole('Super Admin|Admin')
+                                    @can('assignments.update')
                                         <td class="px-3 py-2 text-center whitespace-nowrap">
                                             @if(isset($clientSheetRows[$index]))
                                                 <button onclick="openModal('{{ __('messages.clients.edit_row') }}', '{{ route('clients.sheet-rows.edit', [$client, $clientSheetRows[$index]]) }}')" 
-                                                        class="px-2 py-1 rounded text-white text-xs font-medium transition-all duration-150"
+                                                        class="mt-1 px-2 py-1 rounded text-white text-xs font-medium transition-all duration-150 mr-1"
                                                         style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"
                                                         onmouseover="this.style.background='linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'"
                                                         onmouseout="this.style.background='linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'"
@@ -238,7 +241,26 @@
                                                 </button>
                                             @endif
                                         </td>
-                                    @endhasanyrole
+                                    @endcan
+                                    @can('assignments.delete')
+                                        <td class="px-3 py-2 text-center whitespace-nowrap">
+                                            @if(isset($clientSheetRows[$index]))
+                                                <form method="POST" action="{{ route('clients.sheet-rows.destroy', [$client, $clientSheetRows[$index]]) }}" class="inline mt-3" onsubmit="return confirm('{{ __('messages.clients.confirm_delete_row') }}')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="px-2 py-1 rounded text-white text-xs font-medium transition-all duration-150"
+                                                            style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"
+                                                            onmouseover="this.style.background='linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'"
+                                                            onmouseout="this.style.background='linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'"
+                                                            title="{{ __('messages.common.delete') }}">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </td>
+                                    @endcan
                                 </tr>
                             @endforeach
                         </tbody>

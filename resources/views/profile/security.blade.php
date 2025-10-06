@@ -114,6 +114,27 @@
                                 </div>
                             </div>
 
+                            @if (is_null(auth()->user()->two_factor_confirmed_at))
+                                {{-- Confirm 2FA (required for login challenge) --}}
+                                <div class="mb-6">
+                                    <h4 class="text-lg font-medium text-gray-900 mb-3">{{ __('messages.security.confirm_two_factor') ?? 'Confirm Two-Factor' }}</h4>
+                                    <form method="POST" action="{{ url('/user/confirmed-two-factor-authentication') }}" class="max-w-md">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <label class="block text-sm text-gray-700 mb-1">{{ __('messages.security.fields_code') ?? 'Authentication code' }}</label>
+                                            <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="123456" required>
+                                        </div>
+                                        <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-white shadow-lg hover:shadow-xl"
+                                                style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"
+                                                onmouseover="this.style.background='linear-gradient(135deg, #059669 0%, #047857 100%)'"
+                                                onmouseout="this.style.background='linear-gradient(135deg, #10b981 0%, #059669 100%)'">
+                                            {{ __('messages.security.verify') }}
+                                        </button>
+                                    </form>
+                                    <p class="text-xs text-gray-500 mt-2">{{ __('messages.security.confirm_two_factor_help') ?? 'Enter the 6-digit code from your authenticator app to finish enabling 2FA.' }}</p>
+                                </div>
+                            @endif
+
                             {{-- Recovery Codes Section --}}
                             <div class="mb-6">
                                 <h4 class="text-lg font-medium text-gray-900 mb-3">

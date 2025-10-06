@@ -95,6 +95,35 @@
                         @endunless
                     </div>
 
+                    {{-- Manager: grant per-user edit permission (assignments.update) --}}
+                    @can('grant.edit.permission')
+                        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <label class="inline-flex items-center gap-2">
+                                <input type="checkbox" name="allow_edit" value="1"
+                                       @checked($user->hasDirectPermission('assignments.update'))
+                                       class="rounded border-gray-300 text-indigo-600 shadow-sm">
+                                <span class="text-sm">{{ __('Allow edit (assignments.update)') }}</span>
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1">{{ __('Managers can grant or revoke edit permission for this user without changing the role.') }}</p>
+                        </div>
+                    @endcan
+
+                    {{-- Effective Permissions (read-only) --}}
+                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <label class="block text-sm font-medium mb-2">Permissions</label>
+                        @php($perms = $user->getAllPermissions()->pluck('name'))
+                        @if($perms->isEmpty())
+                            <p class="text-sm text-gray-500">No explicit permissions via roles.</p>
+                        @else
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($perms as $perm)
+                                    <span class="inline-flex px-2 py-0.5 text-[12px] font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200">{{ $perm }}</span>
+                                @endforeach
+                            </div>
+                        @endif
+                        <p class="text-xs text-gray-500 mt-2">Computed from assigned roles. To change, adjust roles above.</p>
+                    </div>
+
                     <div>
                         <x-primary-button>{{ __('Save') }}</x-primary-button>
                     </div>

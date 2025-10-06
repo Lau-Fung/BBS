@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClientSheetRow;
+use App\Models\Device;
+use App\Models\DeviceModel;
 use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
@@ -17,13 +19,14 @@ class DashboardController extends Controller
             ->groupBy(fn ($row) => optional($row->client)->sector ?: __('messages.common.not_specified'))
             ->map->pluck('client_id')->map->unique()->map->count();
 
-        // Devices per device model (company_manufacture used as model label)
-        $devicesPerModel = ClientSheetRow::query()
-            ->select('company_manufacture')
-            ->whereNotNull('company_manufacture')
-            ->get()
-            ->groupBy('company_manufacture')
-            ->map->count();
+        // Devices per device model (e.g., FMC920, FMB920)
+        $devicesPerModel = Device::query()
+            ->with('deviceModel:id,name')
+            ->whereNotNull('device_model_id')
+            ->get(['id','device_model_id'])
+            ->groupBy(fn ($d) => optional($d->deviceModel)->name ?: __('messages.common.not_specified'))
+            ->map->count()
+            ->sortDesc();
 
         // SIM totals per package (data_package_type)
         $simsPerPackage = ClientSheetRow::query()
@@ -42,10 +45,14 @@ class DashboardController extends Controller
             ->map->count();
 
         // Devices out of warranty (2 years after installed_on)
-        $expiredWarrantyCount = ClientSheetRow::query()
+        $expiredWarrantyQuery = ClientSheetRow::query()
+            ->with(['client:id,name'])
             ->whereNotNull('installed_on')
-            ->whereDate('installed_on', '<=', now()->subYears(2))
-            ->count();
+            ->whereDate('installed_on', '<=', now()->subYears(2));
+
+        $expiredWarrantyCount = $expiredWarrantyQuery->count();
+        $expiredWarrantyDevices = $expiredWarrantyQuery
+            ->get(['id','client_id','plate','company_manufacture','device_type','installed_on']);
 
         // Technician installations count
         $technicianTotals = ClientSheetRow::query()
@@ -62,6 +69,7 @@ class DashboardController extends Controller
             'simsPerPackage',
             'simsPerProvider',
             'expiredWarrantyCount',
+            'expiredWarrantyDevices',
             'technicianTotals'
         ));
     }

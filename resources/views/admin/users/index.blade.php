@@ -23,6 +23,58 @@
 
         <div class="py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                {{-- Privilege Details --}}
+                <div class="mb-6 bg-white dark:bg-gray-800 overflow-hidden shadow-lg sm:rounded-lg p-6" style="border: 1px solid #e5e7eb;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Privilege Details</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Admin</span>
+                            </div>
+                            <p class="text-sm text-gray-700 dark:text-gray-300">Has full access to the system, including deleting clients and data.</p>
+                            <ul class="mt-2 text-sm text-gray-600 dark:text-gray-400 list-disc ms-5">
+                                <li>All permissions (manage users, reference data, activity logs)</li>
+                                <li>Create, update, delete, restore, export</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-4 rounded-lg border border-gray-2 00 dark:border-gray-700">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Data Entry</span>
+                            </div>
+                            <p class="text-sm text-gray-700 dark:text-gray-300">Can add, upload and view only. Edit requires Manager permission.</p>
+                            <ul class="mt-2 text-sm text-gray-600 dark:text-gray-400 list-disc ms-5">
+                                <li>View + Create (no edit/delete)</li>
+                                <li>No exports unless explicitly granted</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Manager</span>
+                            </div>
+                            <p class="text-sm text-gray-700 dark:text-gray-300">Can add, upload, view, edit and grant edit permission to Data Entry.</p>
+                            <ul class="mt-2 text-sm text-gray-600 dark:text-gray-400 list-disc ms-5">
+                                <li>Create + Update (no destructive deletes on clients/data)</li>
+                                <li>Can grant edit capability to Data Entry users</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Viewer</span>
+                            </div>
+                            <p class="text-sm text-gray-700 dark:text-gray-300">Can view only and export. Cannot upload or modify data.</p>
+                            <ul class="mt-2 text-sm text-gray-600 dark:text-gray-400 list-disc ms-5">
+                                <li>View + Export</li>
+                                <li>No create/edit/delete</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-lg sm:rounded-lg p-6" style="border: 1px solid #e5e7eb;">
                     <div class="overflow-x-auto">
                         <table class="min-w-full w-100 text-sm" style="border-collapse: separate; border-spacing: 0;">

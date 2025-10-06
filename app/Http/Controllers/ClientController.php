@@ -199,6 +199,7 @@ class ClientController extends Controller
             'USER',
             'ملاحظات',
         ];
+        
         $columns = [
             null, // العدد
             'data_package_type',
@@ -275,31 +276,32 @@ class ClientController extends Controller
             ->orderBy('id')
             ->get();
 
-        // Create headers for export
+        // Create headers for export with Arabic text fix
         $headers = [
-            'العدد', // Count/Number
-            'نوع الباقة', // Package Type
-            'نوع الشريحة', // SIM Type
-            'رقم الشريحة', // SIM Number
+            $this->fixArabicTextForPdf('العدد'), // Count/Number
+            $this->fixArabicTextForPdf('نوع الباقة'), // Package Type
+            $this->fixArabicTextForPdf('نوع الشريحة'), // SIM Type
+            $this->fixArabicTextForPdf('رقم الشريحة'), // SIM Number
             'IMEI',
-            'رقم اللوحة', // Plate
-            'تاريخ التركيب', // Installation Date
-            'موديل المركبة', // Year Model
-            'اسم الشركة المصنعة للمركبة', // Company Manufacture
-            'نوع الجهاز', // Device Type
-            'منافيخ', // Air
-            'سست', // Mechanic
-            'تتبع', // Tracking
-            'نظام التتبع', // System Type
-            'المعايرة', // Calibration
-            'لون المركبة', // Vehicle Color
-            'رقم الطلبcrm', // CRM Integration
-            'الفني', // Technician
-            'الرقم التسلسلي للسيارة', // Vehicle Serial Number
-            'وزن المركبة', // Vehicle Weight
+            $this->fixArabicTextForPdf('رقم اللوحة'), // Plate
+            $this->fixArabicTextForPdf('تاريخ التركيب'), // Installation Date
+            $this->fixArabicTextForPdf('موديل المركبة'), // Year Model
+            $this->fixArabicTextForPdf('اسم الشركة المصنعة للمركبة'), // Company Manufacture
+            $this->fixArabicTextForPdf('نوع الجهاز'), // Device Type
+            $this->fixArabicTextForPdf('منافيخ'), // Air
+            $this->fixArabicTextForPdf('سست'), // Mechanic
+            $this->fixArabicTextForPdf('تتبع'), // Tracking
+            $this->fixArabicTextForPdf('نظام التتبع'), // System Type
+            $this->fixArabicTextForPdf('المعايرة'), // Calibration
+            $this->fixArabicTextForPdf('لون المركبة'), // Vehicle Color
+            $this->fixArabicTextForPdf('رقم الطلبcrm'), // CRM Integration
+            $this->fixArabicTextForPdf('الفني'), // Technician
+            $this->fixArabicTextForPdf('الرقم التسلسلي للسيارة'), // Vehicle Serial Number
+            $this->fixArabicTextForPdf('وزن المركبة'), // Vehicle Weight
             'USER', // User
-            'ملاحظات', // Notes
+            $this->fixArabicTextForPdf('ملاحظات'), // Notes
         ];
+        
 
         // Convert client sheet rows to export format
         $rows = $clientSheetRows->map(function ($row, $index) {
@@ -314,8 +316,8 @@ class ClientController extends Controller
                 $row->year_model ?? '',
                 $row->company_manufacture ?? '',
                 $row->device_type ?? '',
-                $row->air ? 'نعم' : 'لا',
-                $row->mechanic ? 'نعم' : 'لا',
+                $this->fixArabicTextForPdf($row->air ? 'نعم' : 'لا'),
+                $this->fixArabicTextForPdf($row->mechanic ? 'نعم' : 'لا'),
                 $row->tracking ?? '',
                 $row->system_type ?? '',
                 $row->calibration ?? '',
@@ -352,6 +354,36 @@ class ClientController extends Controller
     {
         // redirect to your assignments.create with the client preselected
         return redirect()->route('assignments.create', ['client_id' => $client->id]);
+    }
+
+    public function destroy(Client $client)
+    {
+        // Delete all related sheet rows first
+        $client->sheetRows()->delete();
+        
+        // Delete the client
+        $client->delete();
+        
+        return redirect()->route('clients.index')
+            ->with('success', __('messages.clients.deleted_successfully'));
+    }
+
+    /**
+     * Fix Arabic text for PDF rendering by reversing the text using proper multi-byte handling
+     * This is a workaround for DomPDF's Arabic text reversal issue
+     */
+    private function fixArabicTextForPdf($text)
+    {
+        // Check if text contains Arabic characters
+        if (preg_match('/[\x{0600}-\x{06FF}]/u', $text)) {
+            // Reverse the text character by character (multi-byte safe)
+            $reversed = '';
+            for ($i = mb_strlen($text, 'UTF-8') - 1; $i >= 0; $i--) {
+                $reversed .= mb_substr($text, $i, 1, 'UTF-8');
+            }
+            return $reversed;
+        }
+        return $text;
     }
 
 }

@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Laravel\Fortify\Events\TwoFactorAuthenticationChallenged;
+use Laravel\Fortify\Events\TwoFactorAuthenticationConfirmed;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Models\{Assignment, Device, Vehicle, Sim, Sensor};
@@ -43,5 +47,30 @@ class AppServiceProvider extends ServiceProvider
         if (in_array($locale, ['ar','en'])) {
             App::setLocale($locale);
         }
+
+        // Log Fortify 2FA events for troubleshooting
+        Event::listen(TwoFactorAuthenticationChallenged::class, function ($event) {
+            try {
+                Log::info('2FA challenged', [
+                    'user_id' => $event->user?->id,
+                    'email'   => $event->user?->email,
+                    'ip'      => request()->ip(),
+                ]);
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        });
+
+        Event::listen(TwoFactorAuthenticationConfirmed::class, function ($event) {
+            try {
+                Log::info('2FA confirmed', [
+                    'user_id' => $event->user?->id,
+                    'email'   => $event->user?->email,
+                    'at'      => now()->toDateTimeString(),
+                ]);
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        });
     }
 }

@@ -99,6 +99,7 @@ class UserController extends Controller
             'password'  => ['nullable','confirmed','min:8'], // add regexes for stronger policies if you want
             'roles'     => ['array'],
             'roles.*'   => ['exists:roles,name'],
+            'allow_edit' => ['sometimes','boolean'],
         ];
 
         // Email: only admins can change
@@ -138,6 +139,18 @@ class UserController extends Controller
         // Roles (Admins only)
         if ($isAdmin) {
             $user->syncRoles($request->input('roles', []));
+        }
+
+        // Managers can grant/revoke per-user edit (assignments.update)
+        if ($current->can('grant.edit.permission')) {
+            $allow = $request->boolean('allow_edit');
+            if ($allow) {
+                $user->givePermissionTo('assignments.update');
+            } else {
+                if ($user->hasDirectPermission('assignments.update')) {
+                    $user->revokePermissionTo('assignments.update');
+                }
+            }
         }
 
         return back()->with('status', __('User updated successfully.'));
