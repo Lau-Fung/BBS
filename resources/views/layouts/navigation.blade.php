@@ -102,6 +102,15 @@
                         </a>
                     </li>
 
+                    {{-- Deleted (Recycle Bin) --}}
+                    <li class="nav-item">
+                        <a class="nav-link text-white {{ request()->routeIs('deleted.*') ? 'active fw-bold' : '' }}"
+                           href="{{ route('deleted.index') }}"
+                           style="{{ request()->routeIs('deleted.*') ? 'background: rgba(255,255,255,0.2); border-radius: 8px;' : '' }}">
+                            {{ __('messages.common.deleted') ?? 'Deleted' }}
+                        </a>
+                    </li>
+
                     {{-- Imports (optional quick link) --}}
                     {{-- @can('assignments.view')
                         <li class="nav-item">

@@ -64,6 +64,11 @@ return [
         'row_created' => 'Row created successfully.',
         'row_updated' => 'Row updated successfully.',
         'row_deleted' => 'Row deleted successfully.',
+        'deleted' => 'Deleted',
+        'deleted_at' => 'Deleted at',
+        'actions' => 'Actions',
+        'restore' => 'Restore',
+        'no_results' => 'No results',
     ],
 
     'table' => [
@@ -463,6 +468,7 @@ return [
 
     'clients' => [
         'title' => 'Clients',
+        'rows'  => 'Client Rows',
         'filters_search_ph' => 'Search clients…',
         'filter' => 'Filter',
         'sector' => 'Sector',

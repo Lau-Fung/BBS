@@ -63,6 +63,11 @@ return [
         'row_created' => 'تم إنشاء الصف بنجاح.',
         'row_updated' => 'تم تحديث الصف بنجاح.',
         'row_deleted' => 'تم حذف الصف بنجاح.',
+        'deleted' => 'المحذوفات',
+        'deleted_at' => 'تاريخ الحذف',
+        'actions' => 'الإجراءات',
+        'restore' => 'استعادة',
+        'no_results' => 'لا توجد نتائج',
     ],
 
     'table' => [
@@ -407,6 +412,7 @@ return [
 
     'clients' => [
         'title' => 'العملاء',
+        'rows'  => 'صفوف العملاء',
         'filters_search_ph' => 'البحث عن العملاء…',
         'filter' => 'فلتر',
         'sector' => 'قطاع',

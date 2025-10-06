@@ -146,13 +146,22 @@ class ImportAssignmentsController extends Controller
 
         $bannerClient = null;
         if (!empty($sheetDefaults['client_name'])) {
-            $bannerClient = \App\Models\Client::firstOrCreate(
-                ['name' => $sheetDefaults['client_name']],
-                [
-                    'sector'            => $sheetDefaults['sector'] ?: null,
-                    'subscription_type' => $this->mapSubscription($sheetDefaults['subscription_type']),
-                ]
-            );
+            // Find even if soft-deleted, and restore/update instead of creating duplicates
+            $existing = \App\Models\Client::withTrashed()->where('name', $sheetDefaults['client_name'])->first();
+            if ($existing) {
+                if ($existing->trashed()) { $existing->restore(); }
+                $existing->sector = $sheetDefaults['sector'] ?: $existing->sector;
+                $sub = $this->mapSubscription($sheetDefaults['subscription_type']);
+                if ($sub) { $existing->subscription_type = $sub; }
+                $existing->save();
+                $bannerClient = $existing;
+            } else {
+                $bannerClient = \App\Models\Client::create([
+                    'name'               => $sheetDefaults['client_name'],
+                    'sector'             => $sheetDefaults['sector'] ?: null,
+                    'subscription_type'  => $this->mapSubscription($sheetDefaults['subscription_type']),
+                ]);
+            }
         }
         $globalDefaultClient = $bannerClient ?: $defaultClient;
 
@@ -207,13 +216,23 @@ class ImportAssignmentsController extends Controller
                     static $clientsCache; if ($clientsCache === null) $clientsCache = collect();
                     $client = $clientsCache->get($nameFromRow);
                     if (!$client) {
-                        $client = \App\Models\Client::firstOrCreate(
-                            ['name' => $nameFromRow],
-                            [
-                                'sector'            => $row['sector'] ?? null,
-                                'subscription_type' => $this->mapSubscription($row['subscription_type'] ?? null),
-                            ]
-                        );
+                        $existing = \App\Models\Client::withTrashed()->where('name', $nameFromRow)->first();
+                        if ($existing) {
+                            if ($existing->trashed()) { $existing->restore(); }
+                            // Update minimal fields if provided
+                            $dirty = false;
+                            if (!$existing->sector && !empty($row['sector'])) { $existing->sector = $row['sector']; $dirty = true; }
+                            $sub = $this->mapSubscription($row['subscription_type'] ?? null);
+                            if (!$existing->subscription_type && $sub) { $existing->subscription_type = $sub; $dirty = true; }
+                            if ($dirty) $existing->save();
+                            $client = $existing;
+                        } else {
+                            $client = \App\Models\Client::create([
+                                'name'               => $nameFromRow,
+                                'sector'             => $row['sector'] ?? null,
+                                'subscription_type'  => $this->mapSubscription($row['subscription_type'] ?? null),
+                            ]);
+                        }
                         $clientsCache->put($nameFromRow, $client);
                     } else {
                         $dirty = false;
@@ -358,15 +377,47 @@ class ImportAssignmentsController extends Controller
             in_array(mb_strtolower(trim((string)$v), 'UTF-8'), ['نعم','yes','y','1','true','فعال','نشط'], true) ? 1 :
             (in_array(mb_strtolower(trim((string)$v), 'UTF-8'), ['لا','no','n','0','false'], true) ? 0 : null)
         );
-        $client_sheet_row = new ClientSheetRow([
-            'client_id'   => $client?->id,
+        $clientId = $client?->id;
+
+        // Prefer stable identity in this order: IMEI, SIM number, Plate
+        $identity = [
+            'imei'       => isset($row['imei']) ? (string)$row['imei'] : null,
+            'sim_number' => $row['sim_number'] ?? ($row['sim_serial'] ?? $row['msisdn'] ?? null),
+            'plate'      => $row['plate'] ?? null,
+        ];
+
+        $existing = null;
+        if ($clientId) {
+            if (!empty($identity['imei'])) {
+                $existing = ClientSheetRow::withTrashed()
+                    ->where('client_id', $clientId)
+                    ->where('imei', (string)$identity['imei'])
+                    ->first();
+            }
+            if (!$existing && !empty($identity['sim_number'])) {
+                $existing = ClientSheetRow::withTrashed()
+                    ->where('client_id', $clientId)
+                    ->where('sim_number', (string)$identity['sim_number'])
+                    ->first();
+            }
+            if (!$existing && !empty($identity['plate'])) {
+                $existing = ClientSheetRow::withTrashed()
+                    ->where('client_id', $clientId)
+                    ->where('plate', (string)$identity['plate'])
+                    ->first();
+            }
+        }
+
+        // Build the payload to write/update
+        $payload = [
+            'client_id'   => $clientId,
             'no'          => $row['no'] ?? null,
             // Identifiers kept as strings to avoid 8.99e+18 issues
             'data_package_type'     => $row['data_package_type'] ?? $row['package_type'] ?? null,
             'sim_type'              => $row['sim_type'] ?? $this->pickCarrierName($row) ?? null,
-            'sim_number'            => $row['sim_number'] ?? $row['sim_serial'] ?? $row['msisdn'] ?? null,
-            'imei'                  => (string)($row['imei'] ?? ''),
-            'plate'                 => $row['plate'] ?? null,
+            'sim_number'            => $identity['sim_number'] ?? null,
+            'imei'                  => $identity['imei'] ?? null,
+            'plate'                 => $identity['plate'] ?? null,
 
             'installed_on'          => $this->normalizeDate($row['installed_on'] ?? null),
             'year_model'            => $row['year_model'] ?? $row['year'] ?? null,
@@ -390,9 +441,14 @@ class ImportAssignmentsController extends Controller
 
             'user'                  => $row['user'] ?? null,
             'notes'                 => $row['note'] ?? null,
-        ]);
+        ];
 
-        $client_sheet_row->save();
+        if ($existing) {
+            if ($existing->trashed()) { $existing->restore(); }
+            $existing->fill($payload)->save();
+        } else {
+            ClientSheetRow::create($payload);
+        }
     }
 
 

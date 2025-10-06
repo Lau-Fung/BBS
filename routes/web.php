@@ -161,6 +161,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/activity-logs-quick-stats', [ActivityLogController::class, 'quickStats'])->name('activity-logs.quick-stats');
     Route::get('/activity-logs/export/csv', [ActivityLogController::class, 'exportCsv'])->name('activity-logs.export.csv');
     Route::get('/activity-logs/export/pdf', [ActivityLogController::class, 'exportPdf'])->name('activity-logs.export.pdf');
+
+    // Deleted (Recycle Bin)
+    Route::get('/deleted', [\App\Http\Controllers\DeletedController::class,'index'])->name('deleted.index');
+    Route::post('/deleted/clients/{client}/restore', [\App\Http\Controllers\DeletedController::class,'restoreClient'])->name('deleted.clients.restore');
+    Route::post('/deleted/client-sheet-rows/{row}/restore', [\App\Http\Controllers\DeletedController::class,'restoreRow'])->name('deleted.rows.restore');
+    Route::delete('/deleted/client-sheet-rows/{row}', [\App\Http\Controllers\DeletedController::class,'forceDeleteRow'])->name('deleted.rows.force');
+    Route::delete('/deleted/clients/{client}', [\App\Http\Controllers\DeletedController::class,'forceDeleteClient'])->name('deleted.clients.force');
 });
 
 // Edit All functionality - Outside middleware group to avoid conflicts

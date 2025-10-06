@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->string('name')->unique()->default('CPP');                 // client name
             $table->string('sector')->nullable()->default('Energy');             // sector of work
             $table->string('subscription_type')->nullable()->default('yearly');
+            $table->softDeletes();
             $table->timestamps();
         });
 
