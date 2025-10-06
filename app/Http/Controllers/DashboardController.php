@@ -19,12 +19,12 @@ class DashboardController extends Controller
             ->groupBy(fn ($row) => optional($row->client)->sector ?: __('messages.common.not_specified'))
             ->map->pluck('client_id')->map->unique()->map->count();
 
-        // Devices per device model (e.g., FMC920, FMB920)
-        $devicesPerModel = Device::query()
-            ->with('deviceModel:id,name')
-            ->whereNotNull('device_model_id')
-            ->get(['id','device_model_id'])
-            ->groupBy(fn ($d) => optional($d->deviceModel)->name ?: __('messages.common.not_specified'))
+        // Devices per device model (derived from client sheet rows so deletions reflect)
+        $devicesPerModel = ClientSheetRow::query()
+            ->select('device_type')
+            ->whereNotNull('device_type')
+            ->get()
+            ->groupBy('device_type')
             ->map->count()
             ->sortDesc();
 

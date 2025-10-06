@@ -814,29 +814,31 @@ class ImportAssignmentsController extends Controller
             }
         }
 
-        // ----- ALREADY EXISTS in DB (unique conflicts) -----
+        // ----- ALREADY EXISTS in DB (non-blocking: we will UPSERT on confirm) -----
         if (!empty($row['imei']) && isset($exists['imei'][$row['imei']])) {
             $fieldErrs['imei'] = 'dup-db';
-            $messages[] = "IMEI '{$row['imei']}' already exists.";
+            $messages[] = "IMEI '{$row['imei']}' already exists in current data (client_sheet_rows).";
         }
         if (!empty($row['sim_serial']) && isset($exists['sim_serial'][$row['sim_serial']])) {
             $fieldErrs['sim_serial'] = 'dup-db';
-            $messages[] = "SIM serial '{$row['sim_serial']}' already exists.";
+            $messages[] = "SIM serial '{$row['sim_serial']}' already exists in current data (client_sheet_rows).";
         }
         if (!empty($row['msisdn']) && isset($exists['msisdn'][$row['msisdn']])) {
             $fieldErrs['msisdn'] = 'dup-db';
-            $messages[] = "MSISDN '{$row['msisdn']}' already exists.";
+            $messages[] = "MSISDN '{$row['msisdn']}' already exists in current data (client_sheet_rows).";
         }
         if (!empty($row['plate']) && isset($exists['plate'][$row['plate']])) {
             $fieldErrs['plate'] = 'dup-db';
-            $messages[] = "Plate '{$row['plate']}' already exists.";
+            $messages[] = "Plate '{$row['plate']}' already exists in current data (client_sheet_rows).";
         }
         if (!empty($row['sensor']) && isset($exists['sensor'][$row['sensor']])) {
             $fieldErrs['sensor'] = 'dup-db';
             $messages[] = "Sensor '{$row['sensor']}' already exists.";
         }
 
-        $ok = empty($messages); // strict: any message blocks this row
+        // Non-blocking when only duplicates-with-DB were found
+        $blocking = array_diff(array_values($fieldErrs), ['dup-db']);
+        $ok = empty($blocking) && empty(array_intersect(['required','format'], array_values($fieldErrs)));
         return [$ok, $row, $messages, $fieldErrs];
     }
 
@@ -913,11 +915,14 @@ class ImportAssignmentsController extends Controller
         // duplicates / already-exists
         $dupCounts = $this->duplicateCounts($rows, ['imei','sim_serial','msisdn','plate','sensor']);
         $vals = fn(string $k) => collect($rows)->pluck($k)->filter()->unique()->values();
+        // Existence check should reflect what will be displayed/used in the app => client_sheet_rows
         $exists = [
-            'imei'       => Device::whereIn('imei', $vals('imei'))->pluck('imei')->flip()->all(),
-            'sim_serial' => Sim::whereIn('sim_serial', $vals('sim_serial'))->pluck('sim_serial')->flip()->all(),
-            'msisdn'     => Sim::whereIn('msisdn', $vals('msisdn'))->pluck('msisdn')->flip()->all(),
-            'plate'      => Vehicle::whereIn('plate', $vals('plate'))->pluck('plate')->flip()->all(),
+            'imei'       => ClientSheetRow::whereIn('imei', $vals('imei'))->pluck('imei')->flip()->all(),
+            // importer maps sim_serial/msisdn into sheet's sim_number; use that for existence warnings
+            'sim_serial' => ClientSheetRow::whereIn('sim_number', $vals('sim_serial'))->pluck('sim_number')->flip()->all(),
+            'msisdn'     => ClientSheetRow::whereIn('sim_number', $vals('msisdn'))->pluck('sim_number')->flip()->all(),
+            'plate'      => ClientSheetRow::whereIn('plate', $vals('plate'))->pluck('plate')->flip()->all(),
+            // sensor does not live in client_sheet_rows; keep original sensor existence
             'sensor'     => Sensor::whereIn('serial_or_bt_id', $vals('sensor'))->pluck('serial_or_bt_id')->flip()->all(),
         ];
 

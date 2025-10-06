@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Assignment;
+use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -358,12 +359,26 @@ class ClientController extends Controller
 
     public function destroy(Client $client)
     {
-        // Delete all related sheet rows first
-        $client->sheetRows()->delete();
-        
-        // Delete the client
-        $client->delete();
-        
+        // Remove all related data in a single transaction
+        DB::transaction(function () use ($client) {
+            // Hard delete assignments linked to this client's vehicles
+            $vehicleIds = $client->vehicles()->withTrashed()->pluck('id');
+            if ($vehicleIds->isNotEmpty()) {
+                Assignment::withTrashed()->whereIn('vehicle_id', $vehicleIds)->forceDelete();
+            }
+
+            // Hard delete vehicles
+            $client->vehicles()->withTrashed()->get()->each(function (Vehicle $v) {
+                $v->forceDelete();
+            });
+
+            // Delete client sheet rows
+            $client->sheetRows()->delete();
+
+            // Finally, delete the client
+            $client->delete();
+        });
+
         return redirect()->route('clients.index')
             ->with('success', __('messages.clients.deleted_successfully'));
     }

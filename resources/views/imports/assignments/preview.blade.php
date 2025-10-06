@@ -2,10 +2,18 @@
     // codes we expect: 'required' | 'format' | 'dup-file' | 'dup-db'
     $cellClass = function($err) {
         return match($err) {
-            'required','format','dup-db' => 'bg-red-50 text-red-800 border-red-300',
-            'dup-file'                   => 'bg-amber-50 text-amber-800 border-amber-300',
+            'required','format'         => 'bg-red-50 text-red-800 border-red-300',
+            'dup-file','dup-db'         => 'bg-amber-50 text-amber-800 border-amber-300',
             default                     => '',
         };
+    };
+    $rowClass = function(array $errs) {
+        if (empty($errs)) return '';
+        // If any blocking error -> red row
+        foreach ($errs as $e) { if (in_array($e, ['required','format'], true)) return 'bg-red-50'; }
+        // If only non-blocking duplicates (dup-file or dup-db) -> amber row
+        foreach ($errs as $e) { if (in_array($e, ['dup-file','dup-db'], true)) return 'bg-amber-50'; }
+        return '';
     };
 @endphp
 
@@ -103,8 +111,12 @@
                         </thead>
                         <tbody>
                             @foreach(($rows ?? []) as $row)
-                                @php $ri = $loop->index; @endphp
-                                <tr class="odd:bg-white even:bg-gray-50">
+                                @php 
+                                    $ri = $loop->index; 
+                                    $rowErrs = array_values($cellErrors[$ri] ?? []); 
+                                    $rc = $rowClass($rowErrs);
+                                @endphp
+                                <tr class="{{ $rc !== '' ? $rc : 'odd:bg-white even:bg-gray-50' }}">
                                     @for($cj = 0; $cj < count($mappedKeys ?? []); $cj++)
                                         @php
                                             $key  = $mappedKeys[$cj] ?? null;                 // normalized key for this column
