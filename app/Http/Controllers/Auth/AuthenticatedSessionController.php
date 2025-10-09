@@ -26,6 +26,22 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        // If user has 2FA enabled and confirmed, redirect to Fortify's challenge screen
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && !empty($user->two_factor_secret) && !is_null($user->two_factor_confirmed_at)) {
+            // Prepare Fortify's expected session values for 2FA challenge
+            $remember = $request->boolean('remember');
+            \Illuminate\Support\Facades\Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // Start a fresh session to carry the login challenge state
+            $request->session()->put('login.id', $user->getKey());
+            $request->session()->put('login.remember', $remember);
+
+            return redirect()->route('two-factor.login');
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard.index', absolute: false));

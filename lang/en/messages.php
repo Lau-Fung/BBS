@@ -298,6 +298,8 @@ return [
         '2fa_enabled'    => '2FA is enabled.',
         'scan_qr'        => 'Scan this QR code in Google Authenticator',
         'recovery_codes' => 'Recovery Codes',
+        // 2FA mandatory notice
+        'mandatory_notice' => 'Two-factor authentication is required. Please enable and confirm it to continue.',
         'regen_codes'    => 'Regenerate Codes',
         'enter_code'     => 'Enter authentication code',
         'recovery_code'  => 'Enter recovery code',

@@ -27,6 +27,18 @@
     
     {{-- Your own assets if any --}}
     @vite(['resources/css/app.css','resources/js/app.js'])
+    <style>
+        .hscroll-wrapper{position:relative}
+        /* Arrows follow your pointer vertically inside the scroll area */
+        .hscroll-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:5;background:rgba(0,0,0,.5);color:#fff;border:none;border-radius:999px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.75;transition:opacity .2s}
+        .hscroll-arrow svg{width:18px;height:18px}
+        .hscroll-wrapper:hover .hscroll-arrow{opacity:1}
+        .hscroll-left{left:6px}
+        .hscroll-right{right:6px}
+        .hscroll-gradient-left,.hscroll-gradient-right{position:absolute;top:0;bottom:0;width:24px;pointer-events:none}
+        .hscroll-gradient-left{left:0;background:linear-gradient(90deg, rgba(255,255,255,1) 20%, rgba(255,255,255,0) 100%)}
+        .hscroll-gradient-right{right:0;background:linear-gradient(270deg, rgba(255,255,255,1) 20%, rgba(255,255,255,0) 100%)}
+    </style>
 </head>
 <body>
 
@@ -65,5 +77,63 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    <script>
+        // Enhance all horizontal scroll containers with drag-to-scroll and arrows
+        (function(){
+            function enhance(el){
+                if(el.classList.contains('hscroll-enhanced')) return;
+                el.classList.add('hscroll-enhanced');
+                const wrapper=document.createElement('div');
+                wrapper.className='hscroll-wrapper';
+                el.parentNode.insertBefore(wrapper, el);
+                wrapper.appendChild(el);
+
+                const left=document.createElement('button');
+                left.type='button';
+                left.className='hscroll-arrow hscroll-left';
+                left.innerHTML='\n<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>';
+                const right=document.createElement('button');
+                right.type='button';
+                right.className='hscroll-arrow hscroll-right';
+                right.innerHTML='\n<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>';
+                const gradL=document.createElement('div'); gradL.className='hscroll-gradient-left';
+                const gradR=document.createElement('div'); gradR.className='hscroll-gradient-right';
+                wrapper.appendChild(gradL); wrapper.appendChild(gradR);
+                wrapper.appendChild(left); wrapper.appendChild(right);
+
+                const step=200;
+                left.addEventListener('click', ()=> el.scrollBy({left: -step, behavior: 'smooth'}));
+                right.addEventListener('click', ()=> el.scrollBy({left: step, behavior: 'smooth'}));
+
+                // drag to scroll
+                let isDown=false,startX,scrollLeft;
+                el.addEventListener('mousedown', (e)=>{isDown=true;el.classList.add('dragging');startX=e.pageX-el.offsetLeft;scrollLeft=el.scrollLeft;});
+                el.addEventListener('mouseleave', ()=>{isDown=false;el.classList.remove('dragging')});
+                el.addEventListener('mouseup', ()=>{isDown=false;el.classList.remove('dragging')});
+                el.addEventListener('mousemove', (e)=>{if(!isDown) return;e.preventDefault();const x=e.pageX-el.offsetLeft;const walk=(x-startX);el.scrollLeft=scrollLeft-walk;});
+
+                // follow cursor vertically within the wrapper
+                wrapper.addEventListener('mousemove', (e)=>{
+                    const rect = wrapper.getBoundingClientRect();
+                    const y = Math.min(Math.max(e.clientY - rect.top, 17), rect.height - 17);
+                    left.style.top = y + 'px';
+                    right.style.top = y + 'px';
+                });
+
+                // show/hide arrows based on overflow
+                function refresh(){
+                    const canScroll = el.scrollWidth > el.clientWidth + 5;
+                    left.style.display = right.style.display = canScroll ? 'flex' : 'none';
+                    gradL.style.display = gradR.style.display = canScroll ? 'block' : 'none';
+                }
+                const ro = new ResizeObserver(refresh); ro.observe(el);
+                refresh();
+            }
+            function init(){
+                document.querySelectorAll('.overflow-x-auto, .table-responsive').forEach(enhance);
+            }
+            if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+        })();
+    </script>
 </body>
 </html>

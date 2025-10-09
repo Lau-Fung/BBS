@@ -64,7 +64,7 @@
     }
     
     /* Form styling within modal */
-    .modal-body input[type="text"],
+        .modal-body input[type="text"],
     .modal-body input[type="email"],
     .modal-body input[type="number"],
     .modal-body select,
@@ -86,13 +86,15 @@
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
+        .invalid-field{border-color:#ef4444 !important; box-shadow:0 0 0 2px rgba(239,68,68,.35) !important}
     
-    .modal-body label {
+        .modal-body label {
         font-weight: 600;
         color: #374151;
         margin-bottom: 0.5rem;
         display: block;
     }
+        .required-asterisk{color:#ef4444;margin-inline-start:4px}
     
     .modal-body .btn-primary {
         background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
@@ -182,6 +184,95 @@ function openModal(title, url) {
         .then(response => response.text())
         .then(html => {
             modalContent.innerHTML = html;
+            try {
+                const form = modalContent.querySelector('form');
+                if (form){
+                    // add asterisks to required labels
+                    const requiredNames = ['package_type','sim_type','sim_number','imei','plate','installed_on','year_model','company_manufacture','device_type','crm','technician','vehicle_serial_number'];
+                    form.querySelectorAll('label').forEach(label => {
+                        const forId = label.getAttribute('for');
+                        const input = forId ? form.querySelector('#'+forId) : null;
+                        const name = input ? (input.name || '').replace(/^.*\[(\w+)\].*$/,'$1') : '';
+                        if (requiredNames.includes(name)){
+                            const star = document.createElement('span'); star.className='required-asterisk'; star.textContent='*';
+                            label.appendChild(star);
+                            if (input) input.setAttribute('required','required');
+                        }
+                    });
+
+                    // intercept submit to validate required fields
+                    form.addEventListener('submit', function(e){
+                        let firstInvalid=null;
+                        requiredNames.forEach(key => {
+                            const selector = `[name$="[${key}]"], [name="${key}"]`;
+                            const inp = form.querySelector(selector);
+                            if (inp && !String(inp.value||'').trim()){
+                                inp.classList.add('invalid-field');
+                                if (!firstInvalid) firstInvalid=inp;
+                            } else if (inp) {
+                                inp.classList.remove('invalid-field');
+                            }
+                        });
+                        if (firstInvalid){
+                            e.preventDefault();
+                            firstInvalid.scrollIntoView({behavior:'smooth',block:'center'});
+                        }
+                    });
+
+                    // Enhance fields: carriers, years, yes/no
+                    const getField = (name) => form.querySelector(`[name$="[${name}]"], [name="${name}"]`);
+                    // SIM Type as dropdown
+                    (function(){
+                        const el = getField('sim_type');
+                        if (!el) return;
+                        if (el.tagName.toLowerCase() === 'select') return; // already select
+                        const select = document.createElement('select');
+                        select.name = el.name; select.className = el.className; select.required = el.required;
+                        ['LEBARA','STC','Mobily','Zain'].forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; select.appendChild(o); });
+                        const current = (el.value||'').toString().trim();
+                        const match = Array.from(select.options).find(o=>o.value.toLowerCase()===current.toLowerCase());
+                        select.value = match ? match.value : 'LEBARA';
+                        el.replaceWith(select);
+                    })();
+
+                    // Year Model dropdown
+                    (function(){
+                        const el = getField('year_model');
+                        if (!el) return;
+                        const isSelect = el.tagName.toLowerCase()==='select';
+                        const select = isSelect ? el : document.createElement('select');
+                        if (!isSelect){ select.name = el.name; select.className = el.className; select.required = el.required; }
+                        if (!isSelect || select.options.length < 5){
+                            select.innerHTML='';
+                            const thisYear = new Date().getFullYear();
+                            for (let y=thisYear; y>=1990; y--){ const o=document.createElement('option'); o.value=String(y); o.textContent=String(y); select.appendChild(o);}    
+                        }
+                        const v=(el.value||'').toString().trim(); if (v) select.value=v;
+                        if (!isSelect) el.replaceWith(select);
+                    })();
+
+                    // Yes/No selects
+                    ['air','mechanic','tracking','calibration'].forEach(name=>{
+                        const el = getField(name);
+                        if (!el) return;
+                        const select = document.createElement('select');
+                        select.name = el.name; select.className = el.className; select.required = el.required;
+                        const optNo=document.createElement('option'); optNo.value='0'; optNo.textContent='{{ __('messages.common.no') }}';
+                        const optYes=document.createElement('option'); optYes.value='1'; optYes.textContent='{{ __('messages.common.yes') }}';
+                        select.appendChild(optNo); select.appendChild(optYes);
+                        const text=(el.value||'').toString().toLowerCase();
+                        const isYes = ['yes','1','true','{{ __('messages.common.yes') }}'.toLowerCase()].some(s=>text.indexOf(s)!==-1);
+                        select.value = isYes ? '1':'0';
+                        el.replaceWith(select);
+                    });
+
+                    // Clear invalid highlight on input change
+                    form.querySelectorAll('input,select,textarea').forEach(i=>{
+                        i.addEventListener('input', ()=> i.classList.remove('invalid-field'));
+                        i.addEventListener('change', ()=> i.classList.remove('invalid-field'));
+                    });
+                }
+            } catch(_) {}
         })
         .catch(error => {
             console.error('Error loading form:', error);

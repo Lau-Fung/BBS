@@ -42,7 +42,7 @@ Route::get('/user/two-factor-qr-code', function () {
 })->middleware(['auth'])->name('two-factor.qr-code');
 
 /* -------------------- AUTH’D AREA -------------------- */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth','2fa.confirmed'])->group(function () {
     // profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -62,7 +62,7 @@ Route::middleware('auth')->group(function () {
 
 /* -------------------- ADMIN (permission-based) -------------------- */
 // User management – Admin only (via permission)
-Route::middleware(['auth','verified'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth','verified','2fa.confirmed'])->prefix('admin')->name('admin.')->group(function () {
     // list users (allow if you gave users.view to Manager, otherwise only Admin has it)
     Route::get('/users', [\App\Http\Controllers\Admin\UserController::class,'index'])
         ->middleware('permission:users.view')
@@ -82,7 +82,7 @@ Route::middleware(['auth','verified'])->prefix('admin')->name('admin.')->group(f
 });
 
 /* -------------------- APP DOMAIN ROUTES -------------------- */
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified','2fa.confirmed'])->group(function () {
     // Main resources (visible to Manager / Data Entry too)
     Route::resource('assignments', AssignmentController::class);
     Route::post('assignments/{assignment}/restore', [AssignmentController::class,'restore'])
@@ -171,7 +171,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Edit All functionality - Outside middleware group to avoid conflicts
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified','2fa.confirmed'])->group(function () {
     Route::get('/clients/{client}/edit-all-sheet-rows', [\App\Http\Controllers\ClientSheetRowController::class, 'editAll'])->name('clients.sheet-rows.edit-all');
     Route::post('/clients/{client}/update-all-sheet-rows', [\App\Http\Controllers\ClientSheetRowController::class, 'updateAll'])->name('clients.sheet-rows.update-all');
 });

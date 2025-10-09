@@ -48,5 +48,11 @@ class FortifyServiceProvider extends ServiceProvider
             $key = mb_strtolower((string)$request->input('email')).'|'.$request->ip();
             return [Limit::perMinute(5)->by($key)];
         });
+
+        // Two-factor rate limit (per pending login id)
+        RateLimiter::for('two-factor', function (Request $request) {
+            $loginId = (string) $request->session()->get('login.id', 'guest');
+            return [Limit::perMinute(10)->by('2fa|'.$loginId)];
+        });
     }
 }

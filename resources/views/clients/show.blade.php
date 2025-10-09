@@ -2,7 +2,8 @@
     <style>
     /* borders, spacing, simple colors used in this view only */
     .border-gray-200{border-color:#e5e7eb}
-    .border-red-300{border-color:#fca5a5}
+    .border-red-300{border-color:#ef4444}
+    .ring-red{box-shadow: 0 0 0 2px rgba(239,68,68,.35)}
     .border-amber-300{border-color:#fcd34d}
     .bg-red-50{background:#fef2f2}
     .bg-amber-50{background:#fffbeb}
@@ -172,10 +173,16 @@
                                         $nextDir = $isActive && ($sort['dir'] ?? 'asc') === 'asc' ? 'desc' : 'asc';
                                         $query = array_merge(request()->except(['page']), ['sort' => $col, 'dir' => $nextDir]);
                                     @endphp
+                                    @php $requiredCols = ['data_package_type','sim_type','sim_number','imei','plate','installed_on','year_model','company_manufacture','device_type','crm_integration','technician','vehicle_serial_number']; @endphp
                                     <th class="px-3 py-3 text-right align-bottom whitespace-nowrap font-semibold text-gray-700" style="border-bottom: 2px solid #3b82f6; border-right: 1px solid #e5e7eb;">
                                         @if($isSortable)
                                             <a href="{{ route('clients.show', [$client] + $query) }}" class="inline-flex items-center gap-1 text-gray-700 hover:text-blue-700">
-                                                <span>{{ $h }}</span>
+                                                <span>
+                                                    {{ $h }}
+                                                    @if($col && in_array($col,$requiredCols))
+                                                        <span class="text-red-600">*</span>
+                                                    @endif
+                                                </span>
                                                 @if($isActive)
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                                                         @if(($sort['dir'] ?? 'asc') === 'asc')
@@ -434,12 +441,14 @@
             const rowId = tr.getAttribute('data-row-id');
             if (!rowId) return;
             tr.setAttribute('data-idx', String(idx));
+            const mandatory = ['data_package_type','sim_type','sim_number','imei','plate','installed_on','year_model','company_manufacture','device_type','crm_integration','technician','vehicle_serial_number'];
             tr.querySelectorAll('[data-key]').forEach(td => {
                 const key = td.getAttribute('data-key');
                 const value = td.textContent.trim();
                 td.innerHTML = '';
                 let input;
-                if (key === 'air' || key === 'mechanic') {
+                // Yes/No dropdowns
+                if (['air','mechanic','tracking','calibration'].includes(key)) {
                     // boolean select 0/1 to satisfy validation
                     input = document.createElement('select');
                     input.name = `rows[${idx}][${key}]`;
@@ -450,12 +459,45 @@
                     const normalized = value.toLowerCase();
                     const isYes = ['yes','1','true','{{ __('messages.common.yes') }}'].some(v => normalized.indexOf(v.toLowerCase()) !== -1);
                     input.value = isYes ? '1' : '0';
+                // Carrier dropdown
+                } else if (key === 'sim_type') {
+                    input = document.createElement('select');
+                    input.name = `rows[${idx}][${key}]`;
+                    input.className = 'w-full px-2 py-1 border border-gray-300 rounded inline-input sm';
+                    ['LEBARA','STC','Mobily','Zain'].forEach(opt => {
+                        const o = document.createElement('option'); o.value = opt; o.textContent = opt; input.appendChild(o);
+                    });
+                    // try match existing value ignoring case
+                    const current = value.toLowerCase();
+                    let matched = Array.from(input.options).find(o => o.value.toLowerCase() === current);
+                    input.value = matched ? matched.value : 'LEBARA';
+                // Year dropdown
+                } else if (key === 'year_model') {
+                    input = document.createElement('select');
+                    input.name = `rows[${idx}][${key}]`;
+                    input.className = 'w-full px-2 py-1 border border-gray-300 rounded inline-input sm';
+                    const thisYear = new Date().getFullYear();
+                    for (let y = thisYear; y >= 1990; y--) {
+                        const o = document.createElement('option'); o.value = String(y); o.textContent = String(y); input.appendChild(o);
+                    }
+                    if (value) input.value = value;
+                // CRM field normalize (free text kept as input)
                 } else {
                     input = document.createElement('input');
                     input.type = key === 'installed_on' ? 'date' : 'text';
                     input.name = `rows[${idx}][${key}]`;
                     input.value = value;
                     input.className = 'w-full px-2 py-1 border border-gray-300 rounded inline-input';
+                }
+                // Mark mandatory fields as required
+                if (mandatory.includes(key)) {
+                    input.required = true;
+                    input.addEventListener('invalid', function(){
+                        this.classList.add('border-red-300');
+                    });
+                    input.addEventListener('input', function(){
+                        if (this.value) this.classList.remove('border-red-300');
+                    });
                 }
                 td.appendChild(input);
             });
@@ -480,6 +522,32 @@
 
     async function saveInlineAll(){
         const rows = document.querySelectorAll('tbody tr[data-idx]');
+        const mandatory = ['data_package_type','sim_type','sim_number','imei','plate','installed_on','year_model','company_manufacture','device_type','crm_integration','technician','vehicle_serial_number'];
+        // Client-side required validation with visible highlight
+        let firstInvalid = null;
+        rows.forEach(tr => {
+            tr.querySelectorAll('input,select').forEach(inp => {
+                const m = inp.name.match(/\[(\w+)\]$/);
+                const field = m ? m[1] : inp.name;
+                const isEmpty = !String(inp.value ?? '').trim();
+                if (mandatory.includes(field) && isEmpty){
+                    inp.classList.add('border-red-300');
+                    // Also force inline styles so Bootstrap/Tailwind borders don't mask the color
+                    try { inp.style.borderColor = '#ef4444'; inp.style.boxShadow = '0 0 0 2px rgba(239,68,68,.35)'; } catch(_) {}
+                    inp.setAttribute('aria-invalid','true');
+                    if (!firstInvalid) firstInvalid = inp;
+                } else {
+                    inp.classList.remove('border-red-300');
+                    inp.removeAttribute('aria-invalid');
+                    try { inp.style.boxShadow = ''; } catch(_) {}
+                }
+            });
+        });
+        if (firstInvalid){
+            firstInvalid.scrollIntoView({behavior:'smooth', block:'center'});
+            window.showEditAllNotification('{{ __('messages.common.error_occurred') }}: {{ __('messages.common.required') ?? 'Required fields are missing' }}','error');
+            return;
+        }
         const formData = new FormData();
         rows.forEach(tr => {
             const idx = tr.getAttribute('data-idx');
