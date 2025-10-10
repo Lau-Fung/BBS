@@ -94,13 +94,15 @@
                     @endcan
 
                     {{-- Clients --}}
-                    <li class="nav-item">
-                        <a class="nav-link text-white {{ request()->routeIs('clients.*') ? 'active fw-bold' : '' }}"
-                           href="{{ route('clients.index') }}"
-                           style="{{ request()->routeIs('clients.*') ? 'background: rgba(255,255,255,0.2); border-radius: 8px;' : '' }}">
-                            {{ __('messages.clients.title') }}
-                        </a>
-                    </li>
+                    @can('clients.view')
+                        <li class="nav-item">
+                            <a class="nav-link text-white {{ request()->routeIs('clients.*') ? 'active fw-bold' : '' }}"
+                               href="{{ route('clients.index') }}"
+                               style="{{ request()->routeIs('clients.*') ? 'background: rgba(255,255,255,0.2); border-radius: 8px;' : '' }}">
+                                {{ __('messages.clients.title') }}
+                            </a>
+                        </li>
+                    @endcan
 
                     {{-- Deleted (Recycle Bin) --}}
                     <li class="nav-item">

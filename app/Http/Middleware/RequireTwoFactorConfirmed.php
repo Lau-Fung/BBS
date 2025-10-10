@@ -26,6 +26,15 @@ class RequireTwoFactorConfirmed
                 'two-factor.login',
                 'login',
                 'logout',
+                // Temporarily allow all main navigation routes
+                'dashboard.index',
+                'clients.index',
+                'clients.show',
+                'admin.users.index',
+                'activity-logs.index',
+                'activity-logs.show',
+                'deleted.index',
+                'profile.edit',
             ];
 
             if ($request->route() && in_array($request->route()->getName(), $allowed, true)) {
