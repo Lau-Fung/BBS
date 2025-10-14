@@ -268,8 +268,22 @@
                                          </span>
                                      </td>
                                      <td>{{ $activity->subject_type ? class_basename($activity->subject_type) : '-' }}</td>
-                                     <td>{{ $activity->description }}</td>
-                                     <td>{{ $activity->created_at->format('M d, Y H:i') }}</td>
+                                    <td>
+                                        {{ $activity->description }}
+                                        @if($activity->event === 'deleted' && $activity->subject_type === App\Models\Client::class)
+                                            @php
+                                                $clientName = $activity->properties['attributes']['name']
+                                                    ?? $activity->properties['old']['name']
+                                                    ?? null;
+                                            @endphp
+                                            @if($clientName)
+                                                <div class="text-xs text-gray-500 mt-1">
+                                                    Client: {{ $clientName }}
+                                                </div>
+                                            @endif
+                                        @endif
+                                    </td>
+                                    <td>{{ $activity->created_at->setTimezone('Asia/Riyadh')->format('Y-m-d H:i:s') }}</td>
                                      <td>
                                          <a href="{{ route('activity-logs.show', $activity) }}" 
                                             class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-150"

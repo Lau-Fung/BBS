@@ -42,6 +42,13 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('two-factor.login');
         }
 
+        // If 2FA is not set up (or not confirmed), force user to Security page to enable/confirm it
+        if ($user && (empty($user->two_factor_secret) || is_null($user->two_factor_confirmed_at))) {
+            $request->session()->regenerate();
+            return redirect()->route('profile.security')
+                ->withErrors(['two_factor' => __('messages.security.mandatory_notice')]);
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard.index', absolute: false));

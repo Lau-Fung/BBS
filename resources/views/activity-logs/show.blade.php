@@ -32,7 +32,19 @@
                                 </div>
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500">{{ __('messages.activity_logs.description') }}</dt>
-                                    <dd class="text-sm text-gray-900">{{ $activity->description }}</dd>
+                                    <dd class="text-sm text-gray-900">
+                                        {{ $activity->description }}
+                                        @if($activity->event === 'deleted' && $activity->subject_type === App\Models\Client::class)
+                                            @php
+                                                $clientName = $activity->properties['attributes']['name']
+                                                    ?? $activity->properties['old']['name']
+                                                    ?? null;
+                                            @endphp
+                                            @if($clientName)
+                                                <div class="text-xs text-gray-500 mt-1">Client: {{ $clientName }}</div>
+                                            @endif
+                                        @endif
+                                    </dd>
                                 </div>
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500">{{ __('messages.activity_logs.log_name') }}</dt>
@@ -40,7 +52,7 @@
                                 </div>
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500">{{ __('messages.activity_logs.created_at') }}</dt>
-                                    <dd class="text-sm text-gray-900">{{ $activity->created_at->format('M d, Y H:i:s') }}</dd>
+                                    <dd class="text-sm text-gray-900">{{ $activity->created_at->setTimezone('Asia/Riyadh')->format('Y-m-d H:i:s') }}</dd>
                                 </div>
                             </dl>
                         </div>
@@ -77,7 +89,7 @@
                         <div class="mt-8">
                             <h3 class="text-lg font-medium text-gray-900 mb-4">{{ __('messages.activity_logs.properties') }}</h3>
                             <div class="bg-gray-50 rounded-lg p-4">
-                                <pre class="text-sm text-gray-900 whitespace-pre-wrap">{{ json_encode($activity->properties, JSON_PRETTY_PRINT) }}</pre>
+                                <pre class="text-sm text-gray-900 whitespace-pre-wrap" dir="auto" style="font-family: 'DejaVu Sans', Tahoma, Arial, sans-serif;">{{ json_encode($activity->properties, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) }}</pre>
                             </div>
                         </div>
                     @endif

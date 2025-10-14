@@ -1,43 +1,3 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <title>{{ __('messages.clients.title') }}</title>
-    <style>
-        @page { margin: 18px; }
-        body { direction: {{ app()->getLocale()==='ar' ? 'rtl' : 'ltr' }}; font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color:#111827; }
-        .header { text-align:center; margin-bottom:10px; }
-        .title { font-size:18px; font-weight:bold; }
-        table { width:100%; border-collapse:collapse; }
-        th, td { border:1px solid #d1d5db; padding:6px 5px; }
-        th { background:#f3f4f6; text-align: {{ app()->getLocale()==='ar' ? 'right' : 'left' }}; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="title">{{ __('messages.clients.title') }}</div>
-    </div>
-    <table>
-        <thead>
-            <tr>
-                @foreach(($headers ?? []) as $h)
-                    <th>{{ $h }}</th>
-                @endforeach
-            </tr>
-        </thead>
-        <tbody>
-            @foreach(($rows ?? []) as $r)
-                <tr>
-                    @foreach($r as $cell)
-                        <td>{{ is_scalar($cell) ? $cell : '' }}</td>
-                    @endforeach
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-</body>
-</html>
-
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -55,6 +15,7 @@
             line-height: 1.4;
             color: #333;
             direction: rtl;
+            unicode-bidi: embed; /* ensure base RTL embedding for Arabic shaping */
             margin: 0;
             padding: 0;
         }
@@ -164,11 +125,15 @@
             font-weight: bold;
             color: #1f2937;
             text-align: right;
+            direction: rtl;
+            unicode-bidi: embed;
         }
         
         .sector {
             color: #6b7280;
             font-size: 9px;
+            direction: rtl;
+            unicode-bidi: embed;
         }
         
         .number {
@@ -248,8 +213,31 @@
             @foreach($clients as $i => $c)
                 <tr>
                     <td class="number">{{ $i+1 }}</td>
-                    <td class="company-name arabic-text">{{ $c->name }}</td>
-                    <td class="sector arabic-text">{{ $c->sector ?? __('messages.clients.not_specified') }}</td>
+                    @php
+                        // Ensure mixed Arabic/Latin renders correctly in Dompdf
+                        $escapedName = e($c->name);
+                        // Wrap Latin tokens in LTR spans
+                        $companyDisplay = preg_replace(
+                            '/([A-Za-z0-9][A-Za-z0-9\s\-]*)/u',
+                            '<span style="direction:ltr; unicode-bidi:embed">$1</span>',
+                            $escapedName
+                        );
+                        // Insert LRM around hyphen to stabilize order: Arabic [LRM] - [LRM] Latin
+                        $LRM = html_entity_decode('&lrm;', ENT_QUOTES, 'UTF-8');
+                        $companyDisplay = str_replace(' - ', " {$LRM}-{$LRM} ", $companyDisplay);
+                    @endphp
+                    <td class="company-name arabic-text" dir="auto">{!! $companyDisplay !!}</td>
+                    @php
+                        $escapedSector = e($c->sector ?? __('messages.clients.not_specified'));
+                        $sectorDisplay = preg_replace(
+                            '/([A-Za-z0-9][A-Za-z0-9\s\-]*)/u',
+                            '<span style="direction:ltr; unicode-bidi:embed">$1</span>',
+                            $escapedSector
+                        );
+                        $LRM = html_entity_decode('&lrm;', ENT_QUOTES, 'UTF-8');
+                        $sectorDisplay = str_replace(' - ', " {$LRM}-{$LRM} ", $sectorDisplay);
+                    @endphp
+                    <td class="sector arabic-text" dir="auto">{!! $sectorDisplay !!}</td>
                     <td class="number">{{ $c->vehicles_count }}</td>
                     <td class="number">{{ $c->total_devices }}</td>
                     <td class="models-list">

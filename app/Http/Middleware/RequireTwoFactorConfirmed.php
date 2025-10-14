@@ -19,36 +19,45 @@ class RequireTwoFactorConfirmed
         // If user has not enabled 2FA, or enabled but not confirmed, force them to security page
         $needs2FA = empty($user->two_factor_secret) || is_null($user->two_factor_confirmed_at);
 
-        // Allow Fortify 2FA routes and security page while enforcing
+        // Enforce 2FA: allow browsing (GET/HEAD) everywhere, block state changes
         if ($needs2FA) {
+            // Allow all read-only navigation so users can reach Security page and view content
+            if (in_array($request->method(), ['GET', 'HEAD'], true)) {
+                return $next($request);
+            }
+
+            // Always allow auth + 2FA endpoints
             $allowed = [
                 'profile.security',
                 'two-factor.login',
                 'login',
                 'logout',
-                // Temporarily allow all main navigation routes
-                'dashboard.index',
-                'clients.index',
-                'clients.show',
-                'admin.users.index',
-                'activity-logs.index',
-                'activity-logs.show',
-                'deleted.index',
-                'profile.edit',
             ];
-
+            // Temporarily allow high-priority actions while 2FA rollout is in progress
+            $temporarilyAllowedActions = [
+                // Imports
+                'imports.assignments.preview',
+                'imports.assignments.confirm',
+                // Deleted (Recycle Bin)
+                'deleted.clients.restore',
+                'deleted.rows.restore',
+                'deleted.rows.force',
+                'deleted.clients.force',
+                // Clients destructive
+                'clients.destroy',
+            ];
+            $allowed = array_merge($allowed, $temporarilyAllowedActions);
             if ($request->route() && in_array($request->route()->getName(), $allowed, true)) {
                 return $next($request);
             }
 
-            // Allow POST to enable/confirm 2FA endpoints
             $uri = $request->path();
             if (str_starts_with($uri, 'user/two-factor')) {
                 return $next($request);
             }
 
-            return redirect()->route('profile.security')
-                ->withErrors(['two_factor' => __('messages.security.mandatory_notice')]);
+            // Block all state-changing actions until 2FA is confirmed
+            abort(403, __('messages.security.mandatory_notice'));
         }
 
         return $next($request);

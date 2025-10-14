@@ -553,6 +553,7 @@ return [
         'all_events' => 'All Events',
         'created' => 'Created',
         'updated' => 'Updated',
+        'restored' => 'Restored',
         'deleted' => 'Deleted',
         'login' => 'Login',
         'logout' => 'Logout',

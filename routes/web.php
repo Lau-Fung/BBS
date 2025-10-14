@@ -62,7 +62,7 @@ Route::middleware(['auth','2fa.confirmed'])->group(function () {
 
 /* -------------------- ADMIN (permission-based) -------------------- */
 // User management – Admin only (via permission)
-Route::middleware(['auth','verified','2fa.confirmed'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth','verified'])->prefix('admin')->name('admin.')->group(function () {
     // list users (allow if you gave users.view to Manager, otherwise only Admin has it)
     Route::get('/users', [\App\Http\Controllers\Admin\UserController::class,'index'])
         ->middleware('permission:users.view')
@@ -79,10 +79,15 @@ Route::middleware(['auth','verified','2fa.confirmed'])->prefix('admin')->name('a
         ->middleware('permission:users.manage')->name('users.update');
     Route::delete('/users/{user}', [\App\Http\Controllers\Admin\UserController::class,'destroy'])
         ->middleware('permission:users.manage')->name('users.destroy');
+
+    // Friendly redirect: visiting /admin/users/{user} goes to Edit
+    Route::get('/users/{user}', function (\App\Models\User $user) {
+        return redirect()->route('admin.users.edit', $user);
+    })->middleware('permission:users.manage')->name('users.show');
 });
 
 /* -------------------- APP DOMAIN ROUTES -------------------- */
-Route::middleware(['auth', 'verified','2fa.confirmed'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     // Main resources (visible to Manager / Data Entry too)
     Route::resource('assignments', AssignmentController::class);
     Route::post('assignments/{assignment}/restore', [AssignmentController::class,'restore'])
@@ -154,13 +159,15 @@ Route::middleware(['auth', 'verified','2fa.confirmed'])->group(function () {
     // Test route to debug 405 error
     Route::post('/test-update-all', function() { return response()->json(['success' => true, 'message' => 'Test route works']); })->name('test.update-all');
     
-    // Activity Logs
-    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
-    Route::get('/activity-logs/{activity}', [ActivityLogController::class, 'show'])->name('activity-logs.show');
-    Route::get('/activity-logs-stats', [ActivityLogController::class, 'stats'])->name('activity-logs.stats');
-    Route::get('/activity-logs-quick-stats', [ActivityLogController::class, 'quickStats'])->name('activity-logs.quick-stats');
-    Route::get('/activity-logs/export/csv', [ActivityLogController::class, 'exportCsv'])->name('activity-logs.export.csv');
-    Route::get('/activity-logs/export/pdf', [ActivityLogController::class, 'exportPdf'])->name('activity-logs.export.pdf');
+    // Activity Logs (Admin only)
+    Route::middleware('role:Admin')->group(function () {
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('/activity-logs/{activity}', [ActivityLogController::class, 'show'])->name('activity-logs.show');
+        Route::get('/activity-logs-stats', [ActivityLogController::class, 'stats'])->name('activity-logs.stats');
+        Route::get('/activity-logs-quick-stats', [ActivityLogController::class, 'quickStats'])->name('activity-logs.quick-stats');
+        Route::get('/activity-logs/export/csv', [ActivityLogController::class, 'exportCsv'])->name('activity-logs.export.csv');
+        Route::get('/activity-logs/export/pdf', [ActivityLogController::class, 'exportPdf'])->name('activity-logs.export.pdf');
+    });
 
     // Deleted (Recycle Bin)
     Route::get('/deleted', [\App\Http\Controllers\DeletedController::class,'index'])->name('deleted.index');
@@ -171,7 +178,7 @@ Route::middleware(['auth', 'verified','2fa.confirmed'])->group(function () {
 });
 
 // Edit All functionality - Outside middleware group to avoid conflicts
-Route::middleware(['auth', 'verified','2fa.confirmed'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/clients/{client}/edit-all-sheet-rows', [\App\Http\Controllers\ClientSheetRowController::class, 'editAll'])->name('clients.sheet-rows.edit-all');
     Route::post('/clients/{client}/update-all-sheet-rows', [\App\Http\Controllers\ClientSheetRowController::class, 'updateAll'])->name('clients.sheet-rows.update-all');
 });

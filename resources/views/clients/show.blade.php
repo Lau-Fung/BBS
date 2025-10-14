@@ -87,9 +87,22 @@
                     </div>
                 </form>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start mb-3">
-                    <div class="w-full">
-                        <div>{{ __('messages.clients.sector') }}: <strong>{{ $client->sector }}</strong></div>
-                        
+                    <div class="w-full" id="clientMetaBox">
+                        <div id="clientMetaDisplay">
+                            <div>{{ __('messages.clients.sector') }}: <strong class="arabic-text" dir="auto">{{ $client->sector }}</strong></div>
+                        </div>
+                        <div id="clientMetaEdit" style="display:none">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs text-gray-600">{{ __('messages.clients.name') }}</label>
+                                    <input type="text" id="editClientName" class="w-full px-3 py-2 border border-gray-300 rounded" value="{{ $client->name }}" />
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-600">{{ __('messages.clients.sector') }}</label>
+                                    <input type="text" id="editClientSector" class="w-full px-3 py-2 border border-gray-300 rounded" value="{{ $client->sector }}" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="w-full buttons-grid">
                         {{-- New row (create client sheet row) --}}
@@ -518,6 +531,10 @@
             editBtn.onclick = saveInlineAll;
             editBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
         }
+        // Toggle client meta to edit mode
+        const metaDisplay = document.getElementById('clientMetaDisplay');
+        const metaEdit = document.getElementById('clientMetaEdit');
+        if (metaDisplay && metaEdit){ metaDisplay.style.display = 'none'; metaEdit.style.display = 'block'; }
     }
 
     async function saveInlineAll(){
@@ -549,6 +566,11 @@
             return;
         }
         const formData = new FormData();
+        // Include client meta edits
+        const n = document.getElementById('editClientName');
+        const s = document.getElementById('editClientSector');
+        if (n) formData.append('client[name]', n.value);
+        if (s) formData.append('client[sector]', s.value);
         rows.forEach(tr => {
             const idx = tr.getAttribute('data-idx');
             const rowId = tr.getAttribute('data-row-id');

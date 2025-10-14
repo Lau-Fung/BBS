@@ -27,14 +27,20 @@ trait LogsActivity
     protected function getDescriptionForEvent(string $eventName): string
     {
         $modelName = class_basename($this);
-        
+        $displayName = $this->getAttribute('name')
+            ?? $this->getAttribute('title')
+            ?? $this->getAttribute('label')
+            ?? null;
+
+        $prefix = $displayName ? "{$modelName} '{$displayName}'" : $modelName;
+
         return match($eventName) {
-            'created' => "{$modelName} was created",
-            'updated' => "{$modelName} was updated",
-            'deleted' => "{$modelName} was deleted",
-            'restored' => "{$modelName} was restored",
-            'forceDeleted' => "{$modelName} was permanently deleted",
-            default => "{$modelName} was {$eventName}",
+            'created'      => "{$prefix} was created",
+            'updated'      => "{$prefix} was updated",
+            'deleted'      => "{$prefix} was deleted",
+            'restored'     => "{$prefix} was restored",
+            'forceDeleted' => "{$prefix} was permanently deleted",
+            default        => "{$prefix} was {$eventName}",
         };
     }
 }
