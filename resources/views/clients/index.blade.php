@@ -171,7 +171,7 @@
                             <td class="px-4 py-2 text-gray-700" style="border-right: 1px solid #e5e7eb;">{{ $c->vehicles_count }}</td>
                             <td class="px-4 py-2 text-gray-700" style="border-right: 1px solid #e5e7eb;">{{ $c->total_devices }}</td>
                             <td class="px-4 py-2 text-center d-flex d-flex justify-content-between" style="border-right: 1px solid #e5e7eb;">
-                                <a href="{{ route('clients.show',$c) }}" class="text-indigo-600 hover:text-indigo-800 font-medium mr-3">{{ __('messages.common.edit') }}</a>
+                                <a href="{{ route('clients.show',$c) }}" style="margin-right: 10px;" class="text-indigo-600 hover:text-indigo-800 font-medium mr-3">{{ __('messages.common.edit') }}</a>
                                 @can('clients.delete')
                                     <form method="POST" action="{{ route('clients.destroy', $c) }}" class="inline" onsubmit="return confirm('{{ __('messages.clients.confirm_delete') }}')">
                                         @csrf
