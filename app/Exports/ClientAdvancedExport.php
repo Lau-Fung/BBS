@@ -68,7 +68,7 @@ class ClientAdvancedExport implements FromCollection, WithHeadings, Responsable
                 ->setOptions([
                     'isHtml5ParserEnabled' => true,
                     'isRemoteEnabled'      => true,      // allow loading font files
-                    'defaultFont'          => 'DejaVu Sans', // safe fallback
+                    'defaultFont'          => 'Amiri',
                 ]);
 
             return $pdf->download($this->fileName);

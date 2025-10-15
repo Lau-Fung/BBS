@@ -340,7 +340,12 @@ class ClientController extends Controller
 
         // Handle PDF export differently
         if ($format === 'pdf') {
-            $pdf = Pdf::loadView('clients.client-details-pdf', [
+            $pdf = Pdf::setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled'      => true,
+                    'defaultFont'          => 'Amiri',
+                ])
+                ->loadView('clients.client-details-pdf', [
                 'client' => $client,
                 'headers' => $headers,
                 'rows' => $rows->toArray(),

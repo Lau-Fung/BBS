@@ -103,7 +103,11 @@ class ActivityLogController extends Controller
         // Log the export activity
         ActivityLogService::logExport('activity_logs', 'PDF', $activities->count(), $filters);
 
-        $pdf = Pdf::loadView('activity-logs.export-pdf', compact('activities', 'stats', 'filters'));
+        $pdf = Pdf::setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled'      => true,
+                'defaultFont'          => 'Amiri',
+            ])->loadView('activity-logs.export-pdf', compact('activities', 'stats', 'filters'));
         
         return $pdf->download('activity_logs_' . now()->format('Y-m-d_H-i-s') . '.pdf');
     }

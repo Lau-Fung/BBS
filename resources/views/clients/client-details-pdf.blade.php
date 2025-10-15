@@ -4,17 +4,30 @@
     <meta charset="UTF-8">
     <title>{{ $client->name }} - {{ __('messages.clients.client_details') }}</title>
     <style>
+        @font-face {
+            font-family: 'Amiri';
+            src: url('{{ public_path('fonts/Amiri-Regular.ttf') }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Amiri';
+            src: url('{{ public_path('fonts/Amiri-Bold.ttf') }}') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
         @page {
             margin: 5mm;
             size: A4 landscape;
         }
         
         body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-family: 'Amiri', 'DejaVu Sans', Arial, sans-serif;
             font-size: 8px;
             line-height: 1.2;
             color: #333;
             direction: rtl;
+            unicode-bidi: embed;
             margin: 0;
             padding: 0;
         }

@@ -5,11 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ __('messages.activity_logs.title') }} - {{ __('messages.common.export') }}</title>
     <style>
+        @font-face {
+            font-family: 'Amiri';
+            src: url('{{ public_path('fonts/Amiri-Regular.ttf') }}') format('truetype');
+            font-weight: normal; font-style: normal;
+        }
         /* Use DejaVu Sans for Arabic; set document direction based on locale */
         @page { margin: 20px; }
         body { direction: {{ app()->getLocale()==='ar' ? 'rtl' : 'ltr' }}; }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: 'Amiri', 'DejaVu Sans', sans-serif;
             font-size: 12px;
             line-height: 1.4;
             color: #333;
