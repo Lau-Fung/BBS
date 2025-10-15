@@ -64,9 +64,12 @@ class ClientController extends Controller
         // Log export activity
         ActivityLogService::logExport('clients_summary', 'pdf', count($clients));
 
-        $pdf = Pdf::loadView('clients.summary-pdf', [
+        $pdf = Pdf::setOptions([
+            'defaultFont' => 'Amiri',
+            'isHtml5ParserEnabled' => true,
+        ])->loadView('clients.summary-pdf', [
             'clients' => $clients,
-            'q'       => $q,
+            'q' => $q,
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download('clients-summary.pdf');

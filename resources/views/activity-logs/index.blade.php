@@ -167,6 +167,7 @@
                                 <option value="created" {{ ($filters['event'] ?? '') === 'created' ? 'selected' : '' }}>{{ __('messages.activity_logs.created') }}</option>
                                 <option value="updated" {{ ($filters['event'] ?? '') === 'updated' ? 'selected' : '' }}>{{ __('messages.activity_logs.updated') }}</option>
                                 <option value="deleted" {{ ($filters['event'] ?? '') === 'deleted' ? 'selected' : '' }}>{{ __('messages.activity_logs.deleted') }}</option>
+                                <option value="restored" {{ ($filters['event'] ?? '') === 'restored' ? 'selected' : '' }}>{{ __('messages.activity_logs.restored') }}</option>
                                 <option value="login" {{ ($filters['event'] ?? '') === 'login' ? 'selected' : '' }}>{{ __('messages.activity_logs.login') }}</option>
                                 <option value="logout" {{ ($filters['event'] ?? '') === 'logout' ? 'selected' : '' }}>{{ __('messages.activity_logs.logout') }}</option>
                                 <option value="import" {{ ($filters['event'] ?? '') === 'import' ? 'selected' : '' }}>{{ __('messages.activity_logs.import') }}</option>

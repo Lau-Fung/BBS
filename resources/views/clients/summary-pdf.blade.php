@@ -4,20 +4,25 @@
     <meta charset="utf-8">
     <title>{{ __('messages.clients.summary_report') }}</title>
     <style>
+        /* Prefer Amiri/DejaVu Sans for reliable Arabic glyphs */
+
         @page {
             margin: 15mm;
             size: A4 portrait;
         }
         
         body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-family: 'Amiri', 'DejaVu Sans', Tahoma, Arial, sans-serif;
             font-size: 11px;
             line-height: 1.4;
             color: #333;
+        }
+        .arabic-text {
             direction: rtl;
-            unicode-bidi: embed; /* ensure base RTL embedding for Arabic shaping */
-            margin: 0;
-            padding: 0;
+            unicode-bidi: embed;   /* supported by dompdf */
+            letter-spacing: 0 !important;
+            word-spacing: normal !important;
+            font-family: 'Amiri', 'DejaVu Sans', Tahoma, Arial, sans-serif; /* Arabic-capable */
         }
         
         .header {
@@ -92,6 +97,8 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            direction: rtl;
+            unicode-bidi: embed;
         }
         
         th {
@@ -103,6 +110,8 @@
             font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            direction: rtl;
+            unicode-bidi: embed;
         }
         
         td {
@@ -111,6 +120,8 @@
             text-align: center;
             vertical-align: middle;
             font-size: 10px;
+            direction: rtl;
+            unicode-bidi: embed;
         }
         
         tr:nth-child(even) {
@@ -127,6 +138,8 @@
             text-align: right;
             direction: rtl;
             unicode-bidi: embed;
+            white-space: nowrap; /* avoid line breaks splitting mixed RTL/LTR */
+            font-family: 'Amiri', 'DejaVu Sans', Tahoma, Arial, sans-serif;
         }
         
         .sector {
@@ -156,12 +169,6 @@
             border-top: 1px solid #e5e7eb;
             padding-top: 15px;
         }
-        
-        .arabic-text {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            direction: rtl;
-        }
-        
         .page-break {
             page-break-before: always;
         }
@@ -198,6 +205,18 @@
         </div>
     </div>
     
+    @php
+        // Helper: keep Arabic RTL intact, only wrap ASCII tokens in LTR spans and stabilize hyphens
+        $wrapMixedRtl = function (?string $text): string {
+            $t = e($text ?? '');
+            // Wrap pure ASCII/number tokens (no spaces) in LTR span so CPP123 etc. render left-to-right
+            $t = preg_replace('/([A-Za-z0-9][A-Za-z0-9._-]*)/u', '<span dir="ltr" style="unicode-bidi: embed;">$1</span>', $t);
+            // Stabilize hyphen between Arabic and Latin
+            $t = preg_replace('/\s*-\s*/u', '&lrm; - &lrm;', $t);
+            return $t;
+        };
+    @endphp
+
     <table>
         <thead>
             <tr>
@@ -212,38 +231,41 @@
         <tbody>
             @foreach($clients as $i => $c)
                 <tr>
-                    <td class="number">{{ $i+1 }}</td>
+                    <td class="number" dir="ltr"><span dir="ltr">{{ $i+1 }}</span></td>
                     @php
-                        // Ensure mixed Arabic/Latin renders correctly in Dompdf
-                        $escapedName = e($c->name);
-                        // Wrap Latin tokens in LTR spans
-                        $companyDisplay = preg_replace(
-                            '/([A-Za-z0-9][A-Za-z0-9\s\-]*)/u',
-                            '<span style="direction:ltr; unicode-bidi:embed">$1</span>',
-                            $escapedName
-                        );
-                        // Insert LRM around hyphen to stabilize order: Arabic [LRM] - [LRM] Latin
-                        $LRM = html_entity_decode('&lrm;', ENT_QUOTES, 'UTF-8');
-                        $companyDisplay = str_replace(' - ', " {$LRM}-{$LRM} ", $companyDisplay);
+                        $LRM = html_entity_decode('&lrm;', ENT_QUOTES, 'UTF-8'); // Left-to-right mark
+                        $RLM = html_entity_decode('&rlm;', ENT_QUOTES, 'UTF-8'); // Right-to-left mark (kept if needed)
+                        $companyOut = '';
+
+                        if (preg_match('/^(.*?)[\s]*-[\s]*(\p{Latin}[\p{Latin}0-9._\-\s]*)$/u', $c->name, $m)) {
+                            $arabicPart = e($m[1]);
+                            $latinPart  = e($m[2]);
+
+                            // Render exactly like the sample: Latin - Arabic
+                            $companyOut =
+                                '<span dir="ltr" style="unicode-bidi:isolate">'.$latinPart.'</span>'
+                                .' - '
+                                .'<span dir="rtl" style="unicode-bidi:isolate-override">'.$arabicPart.'</span>';
+                        } else {
+                            $companyOut = e($c->name);
+                        }
                     @endphp
-                    <td class="company-name arabic-text" dir="auto">{!! $companyDisplay !!}</td>
+                    <td class="company-name arabic-text" dir="rtl">{!! $companyOut !!}</td>
                     @php
-                        $escapedSector = e($c->sector ?? __('messages.clients.not_specified'));
-                        $sectorDisplay = preg_replace(
-                            '/([A-Za-z0-9][A-Za-z0-9\s\-]*)/u',
-                            '<span style="direction:ltr; unicode-bidi:embed">$1</span>',
-                            $escapedSector
-                        );
-                        $LRM = html_entity_decode('&lrm;', ENT_QUOTES, 'UTF-8');
-                        $sectorDisplay = str_replace(' - ', " {$LRM}-{$LRM} ", $sectorDisplay);
+                        $sectorOut = e($c->sector ?? __('messages.clients.not_specified'));
                     @endphp
-                    <td class="sector arabic-text" dir="auto">{!! $sectorDisplay !!}</td>
-                    <td class="number">{{ $c->vehicles_count }}</td>
-                    <td class="number">{{ $c->total_devices }}</td>
+                    <td class="sector arabic-text" dir="rtl">{!! $sectorOut !!}</td>
+                    <td class="number" dir="ltr"><span dir="ltr">{{ $c->vehicles_count }}</span></td>
+                    <td class="number" dir="ltr"><span dir="ltr">{{ $c->total_devices }}</span></td>
                     <td class="models-list">
                         @if($c->models->isNotEmpty())
                             @foreach($c->models as $model)
-                                <div>{{ $model['model'] ?? 'UNKNOWN' }}: {{ $model['count'] ?? 0 }}</div>
+                                @php
+                                    $modelOut = e($model['model'] ?? 'UNKNOWN');
+                                    $modelOut = preg_replace('/([A-Za-z0-9][A-Za-z0-9._\/-]*)/u', '<span dir="ltr" style="unicode-bidi: embed;">$1</span>', $modelOut);
+                                    $modelOut = str_replace('-', $LRM.'-'.$LRM, $modelOut);
+                                @endphp
+                                <div dir="rtl">{!! $modelOut !!}: {{ $model['count'] ?? 0 }}</div>
                             @endforeach
                         @else
                             <span style="color: #9ca3af;">{{ __('messages.clients.no_data_available') }}</span>

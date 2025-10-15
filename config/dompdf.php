@@ -180,7 +180,8 @@ return [
          * @var string
          */
         // Use DejaVu Sans which supports Arabic glyphs
-        'default_font' => 'DejaVu Sans',
+        'default_font' => 'Amiri',
+        'isHtml5ParserEnabled' => true,
 
         /**
          * Image DPI setting

@@ -8,6 +8,19 @@ use Illuminate\Http\Request;
 
 class DeletedController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        // View Deleted page allowed for viewers of clients (Data Entry included)
+        $this->middleware('permission:clients.view')->only(['index']);
+        // Restores are privileged (Data Entry should NOT restore)
+        $this->middleware('permission:clients.delete')->only(['restoreClient']);
+        $this->middleware('permission:assignments.restore')->only(['restoreRow']);
+        // Force deletes remain restricted
+        $this->middleware('permission:clients.delete')->only(['forceDeleteClient']);
+        $this->middleware('permission:assignments.delete')->only(['forceDeleteRow']);
+    }
+
     public function index()
     {
         $clients = Client::onlyTrashed()->orderBy('deleted_at','desc')->get();
