@@ -12,8 +12,9 @@ use App\Exports\ClientAdvancedExport;
 use App\Exports\ArrayExport;
 use Maatwebsite\Excel\Excel as ExcelWriter;
 use App\Support\Layouts\AdvancedLayout;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Mpdf\Mpdf;
 use App\Services\ActivityLogService;
+use Mpdf\HTMLParserMode;
 
 class ClientController extends Controller
 {
@@ -64,15 +65,39 @@ class ClientController extends Controller
         // Log export activity
         ActivityLogService::logExport('clients_summary', 'pdf', count($clients));
 
-        $pdf = Pdf::setOptions([
-            'defaultFont' => 'Amiri',
-            'isHtml5ParserEnabled' => true,
-        ])->loadView('clients.summary-pdf', [
+        // Render Blade to HTML then generate with mPDF
+        $html = view('clients.summary-pdf', [
             'clients' => $clients,
             'q' => $q,
-        ])->setPaper('a4', 'portrait');
+        ])->render();
 
-        return $pdf->download('clients-summary.pdf');
+        $mpdf = new Mpdf([
+            'mode'           => 'utf-8',
+            'format'         => 'A4',
+            'orientation'    => 'P',
+            'default_font'   => 'dejavusans',
+            'tempDir'        => storage_path('app/mpdf'),
+            'autoScriptToLang' => true,
+            'autoLangToFont'    => true,
+        ]);
+        $mpdf->WriteHTML($html, HTMLParserMode::HTML_BODY);
+        $mpdf->SetDirectionality('rtl');     // enforce RTL page flow
+        // $mpdf->hyphenate = false;            // avoid odd word breaks in Arabic/English mixes
+        $mpdf->useSubstitutions = true;      // better glyph fallback
+        $mpdf->shrink_tables_to_fit = 1;     // keep table layout intact
+
+
+        // Generate PDF as a binary string and return with explicit headers
+        if (ob_get_length()) { ob_end_clean(); }
+        $pdfString = $mpdf->Output('', 'S');
+
+        return response($pdfString, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="clients-summary.pdf"',
+            'Content-Length'      => strlen($pdfString),
+            'Cache-Control'       => 'private, max-age=0, must-revalidate',
+            'Pragma'              => 'public',
+        ]);
     }
 
     /** ---------- Shared summary builder ---------- */
@@ -338,21 +363,41 @@ class ClientController extends Controller
         // Log export activity
         ActivityLogService::logExport('client_details', $format, count($rows), ['client_id' => $client->id]);
 
-        // Handle PDF export differently
+        // Handle PDF export with mPDF
         if ($format === 'pdf') {
-            $pdf = Pdf::setOptions([
-                    'isHtml5ParserEnabled' => true,
-                    'isRemoteEnabled'      => true,
-                    'defaultFont'          => 'Amiri',
-                ])
-                ->loadView('clients.client-details-pdf', [
+            $html = view('clients.client-details-pdf', [
                 'client' => $client,
                 'headers' => $headers,
                 'rows' => $rows->toArray(),
                 'clientSheetRows' => $clientSheetRows
-            ])->setPaper('a4', 'landscape'); // Use landscape for better table display
+            ])->render();
+
+            $mpdf = new Mpdf([
+                'mode'           => 'utf-8',
+                'format'         => 'A4',
+                'orientation'    => 'P',
+                'default_font'   => 'dejavusans',
+                'tempDir'        => storage_path('app/mpdf'),
+                'autoScriptToLang' => true,
+                'autoLangToFont'    => true,
+            ]);
             
-            return $pdf->download('client_' . $client->id . '_data.pdf');
+            $mpdf->WriteHTML($html, HTMLParserMode::HTML_BODY);
+            $mpdf->SetDirectionality('rtl');     // enforce RTL page flow
+            // $mpdf->hyphenate = false;            // avoid odd word breaks in Arabic/English mixes
+            $mpdf->useSubstitutions = true;      // better glyph fallback
+            $mpdf->shrink_tables_to_fit = 1;     // keep table layout intact
+
+            if (ob_get_length()) { ob_end_clean(); }
+            $pdfString = $mpdf->Output('', 'S');
+
+            return response($pdfString, 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="client-details.pdf"',
+                'Content-Length'      => strlen($pdfString),
+                'Cache-Control'       => 'private, max-age=0, must-revalidate',
+                'Pragma'              => 'public',
+            ]);
         }
         
         // Create a simple array export for Excel/CSV
